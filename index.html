@@ -1,0 +1,1369 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PGC · Реестр проблем</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#001966; --navy-deep:#000E40; --navy-2:#0B2A86; --navy-soft:#E6EAF5;
+  --gold:#C9930F; --gold-hi:#E3B23C; --gold-soft:#F7EBCB;
+  --paper:#F3F4F8; --surface:#FFFFFF; --surface-2:#F7F8FB;
+  --ink:#0A1538; --ink-2:#2E3756; --muted:#5E6785; --line:#DEE2EC; --line-2:#ECEFF5;
+  --danger:#D23B3B; --warn:#C27C0E; --ok:#12A06A;
+  --display:'Unbounded',Onest,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:Onest,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--paper);color:var(--ink);font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--navy-2);text-decoration:none} a:hover{text-decoration:underline}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.muted{color:var(--muted)} .small{font-size:12.5px} .nowrap{white-space:nowrap}
+.pre{white-space:pre-wrap;word-break:break-word}
+.num{font-family:var(--display);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+/* ---------- каркас: тёмно-синяя «L» из сайдбара и шапки ---------- */
+.shell{display:grid;grid-template-columns:264px 1fr;min-height:100vh}
+.side{background:var(--navy);color:rgba(255,255,255,.72);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:22px 16px 18px;z-index:5}
+.brand{display:block;padding:0 10px 6px}
+.brand img{display:block;width:118px;height:auto;margin-left:-8px;clip-path:inset(0 6% 0 0)}
+.brand-sub{font-size:12.5px;color:rgba(255,255,255,.55);padding:0 10px 22px;border-bottom:1px solid rgba(255,255,255,.09);margin-bottom:14px}
+.brand-sub b{display:block;color:#fff;font-weight:600;font-size:14px;margin-bottom:1px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{position:relative;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.72);font-weight:500;text-decoration:none;transition:background .15s,color .15s}
+.nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav a.on{background:rgba(255,255,255,.08);color:#fff}
+.nav a.on::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--gold)}
+.nav svg{width:19px;height:19px;flex:none}
+.nav .count{margin-left:auto;background:var(--gold);color:var(--navy-deep);border-radius:99px;font-size:11.5px;padding:0 8px;line-height:19px;font-weight:700}
+.cta{display:flex;align-items:center;justify-content:center;gap:8px;margin:18px 0 0;padding:12px 14px;border-radius:12px;background:var(--gold);color:var(--navy-deep);font-weight:700;text-decoration:none;transition:background .15s,transform .15s}
+.cta:hover{background:var(--gold-hi);text-decoration:none}
+.cta svg{width:17px;height:17px}
+.me{margin-top:auto;border-top:1px solid rgba(255,255,255,.09);padding:16px 6px 0;display:flex;align-items:center;gap:11px}
+.avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px;flex:none;border:1.5px solid rgba(227,178,60,.6)}
+.me .who{min-width:0;flex:1} .me .who b{display:block;color:#fff;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .me .who span{font-size:12px;color:rgba(255,255,255,.55)}
+.icon-btn{background:none;border:0;color:rgba(255,255,255,.55);cursor:pointer;padding:7px;border-radius:8px} .icon-btn:hover{color:#fff;background:rgba(255,255,255,.08)}
+.main{min-width:0;display:flex;flex-direction:column}
+
+.band{background:var(--navy);color:#fff;padding:26px 40px 30px;position:relative}
+.band.tall{padding-bottom:84px}
+.band-row{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.band h1{font-family:var(--display);font-weight:600;font-size:26px;letter-spacing:-.01em;line-height:1.2}
+.band .sub{color:rgba(255,255,255,.62);font-size:13.5px;margin-top:6px}
+.band .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.rule{width:56px;height:3px;background:var(--gold);border-radius:2px;margin-top:14px}
+.content{padding:24px 40px 56px;max-width:1480px;width:100%;position:relative;z-index:1}
+.band.tall + .content{margin-top:-60px}
+.demo-bar{background:var(--navy-deep);color:rgba(255,255,255,.75);padding:8px 40px;font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.08)}
+.demo-bar b{color:var(--gold-hi);font-weight:600}
+.demo-bar select{padding:4px 8px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:var(--navy);color:#fff}
+
+/* ---------- контролы ---------- */
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);padding:9px 15px;border-radius:11px;cursor:pointer;font-weight:600;color:var(--ink-2);white-space:nowrap;text-decoration:none;transition:background .15s,border-color .15s}
+.btn:hover{border-color:#C6CCDB;text-decoration:none;background:var(--surface-2)}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff} .btn.primary:hover{background:var(--navy-2)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy-deep)} .btn.gold:hover{background:var(--gold-hi)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.ghost{background:transparent;border-color:transparent} .btn.ghost:hover{background:var(--line-2)}
+.btn.on-navy{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff} .btn.on-navy:hover{background:rgba(255,255,255,.14)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:9px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn svg{width:16px;height:16px}
+.input,.select,.textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:11px;padding:10px 13px;outline:none;transition:border-color .15s,box-shadow .15s}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(11,42,134,.12)}
+.textarea{min-height:110px;resize:vertical;line-height:1.6}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235E6785' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:32px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:13px;font-weight:600;color:var(--ink-2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+
+/* ---------- панели ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.card.lift{box-shadow:0 18px 40px -24px rgba(0,25,102,.35)}
+.card-h{display:flex;align-items:baseline;gap:4px 10px;padding:18px 22px 0;flex-wrap:wrap}
+.card-h h3{font-size:15px;font-weight:700}
+.card-h .muted{margin-left:auto;font-size:12.5px}
+.card-b{padding:14px 22px 20px}
+.grid{display:grid;gap:18px}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-21{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+.empty{padding:26px;text-align:center;color:var(--muted);font-size:13.5px}
+
+/* ---------- герой дашборда ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px 40px;align-items:end}
+.hero-hi{color:rgba(255,255,255,.62);font-size:14px;margin-bottom:8px}
+.hero-h{font-family:var(--display);font-weight:600;font-size:46px;line-height:1.05;letter-spacing:-.025em}
+.hero-h .n{color:var(--gold-hi)}
+.hero-s{color:rgba(255,255,255,.75);font-size:16px;margin-top:12px;max-width:60ch}
+.hero-s b{color:#fff;font-weight:600}
+.river{margin-top:30px}
+.river-bar{display:flex;gap:3px;height:16px}
+.river-bar div{height:100%;border-radius:4px;transform-origin:left;min-width:6px}
+.river-l{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:12px;font-size:13px;color:rgba(255,255,255,.7)}
+.river-l span{display:inline-flex;align-items:center;gap:7px}
+.river-l i{width:9px;height:9px;border-radius:3px;background:var(--c)}
+.river-l b{color:#fff;font-weight:600;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(5,auto);border-left:1px solid rgba(255,255,255,.14)}
+.stat{padding:2px 26px;border-right:1px solid rgba(255,255,255,.14)}
+.stat .v{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.1;letter-spacing:-.02em}
+.stat .l{font-size:12.5px;color:rgba(255,255,255,.6);margin-top:4px;white-space:nowrap}
+.stat.alert .v{color:#FF8A8A}
+
+/* бары */
+.bars{display:flex;flex-direction:column;gap:11px}
+.bar-row{display:grid;grid-template-columns:minmax(110px,40%) 1fr 30px;gap:12px;align-items:center;font-size:13.5px}
+.bar-row .l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+.bar-track{height:8px;background:var(--line-2);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:var(--c,var(--navy))}
+.bar-row .v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2)}
+.legend i{width:9px;height:9px;border-radius:3px;background:var(--c);display:inline-block}
+
+/* бейджи */
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:600;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 10%,#fff)}
+.badge.dot::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.band .badge{background:rgba(255,255,255,.1);color:#fff}
+.band .badge.dot::before{background:var(--c)}
+.pill-id{font-family:var(--display);font-weight:600;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.dl{font-size:12.5px;font-weight:600;white-space:nowrap}
+.dl.over{color:var(--danger)} .dl.soon{color:var(--warn)} .dl.ok{color:var(--muted)}
+
+/* реестр */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px;border-bottom:1px solid var(--line)}
+.filters .input{max-width:300px}
+.filters .select{width:auto;min-width:150px;padding-top:8px;padding-bottom:8px}
+.chip-t{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border:1px solid var(--line);border-radius:99px;background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;color:var(--ink-2);user-select:none}
+.chip-t.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.table-wrap{overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+.t th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+.t th:hover{color:var(--ink)}
+.t td{padding:15px 16px;border-bottom:1px solid var(--line-2);vertical-align:top}
+.t tbody tr{cursor:pointer;transition:background .12s}
+.t tbody tr:hover{background:#F5F7FC}
+.t tbody tr:last-child td{border-bottom:0}
+.t tbody tr.over td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
+.t .ttl{font-weight:600;color:var(--ink);max-width:500px;line-height:1.4}
+.t .sub{color:var(--muted);font-size:12.5px;margin-top:3px}
+
+/* списки */
+.li{display:flex;gap:14px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line-2);cursor:pointer}
+.li:last-child{border-bottom:0}
+.li:hover .li-t{color:var(--navy-2)}
+.li-t{font-weight:600;font-size:14px;line-height:1.4}
+.li-m{display:flex;gap:6px 12px;flex-wrap:wrap;margin-top:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+.hot .li{padding-left:14px;position:relative}
+.hot .li::before{content:"";position:absolute;left:0;top:15px;bottom:15px;width:3px;border-radius:3px;background:var(--c,var(--danger))}
+
+/* карточка проблемы */
+.d-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.d-title{font-family:Onest,system-ui,sans-serif!important;font-size:30px;font-weight:700;line-height:1.25;letter-spacing:-.01em;max-width:52ch}
+.d-meta{color:rgba(255,255,255,.62);font-size:13.5px;margin-top:10px}
+.d-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px 40px;align-items:end}
+.d-dl{text-align:right;min-width:170px}
+.d-dl .big{font-family:var(--display);font-weight:600;font-size:52px;line-height:1;letter-spacing:-.03em;color:var(--gold-hi)}
+.d-dl .big.over{color:#FF8A8A}
+.d-dl .cap{color:rgba(255,255,255,.65);font-size:13px;margin-top:6px}
+.d-dl .resp{margin-top:12px;font-size:13px;color:rgba(255,255,255,.65)} .d-dl .resp b{color:#fff;font-weight:600}
+.back{display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,.65);font-size:13px;margin-bottom:14px;text-decoration:none} .back:hover{color:#fff;text-decoration:none}
+.back svg{width:15px;height:15px}
+.d-grid{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:18px;align-items:start}
+.sec{padding:16px 0;border-bottom:1px solid var(--line-2)} .sec:last-child{border-bottom:0}
+.sec h4{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:600}
+.sec .v{color:var(--ink-2);white-space:pre-wrap;word-break:break-word;line-height:1.65;max-width:78ch}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{background:var(--navy-soft);color:var(--navy);border-radius:8px;padding:4px 10px;font-size:13px;font-weight:500}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:9px 14px;font-size:13.5px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;color:var(--ink-2);font-weight:500;word-break:break-word}
+.timeline{position:relative;margin:4px 0 0;padding:0;list-style:none}
+.timeline li{position:relative;padding:0 0 18px 38px}
+.timeline li::before{content:"";position:absolute;left:13px;top:28px;bottom:0;width:1px;background:var(--line)}
+.timeline li:last-child::before{display:none}
+.tl-ic{position:absolute;left:0;top:0;width:27px;height:27px;border-radius:50%;display:grid;place-items:center;font-size:12px;background:var(--line-2)}
+.tl-h{font-size:13.5px;color:var(--ink-2)} .tl-h b{color:var(--ink)}
+.tl-t{font-size:12px;color:var(--muted)}
+.tl-body{margin-top:7px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:10px 13px;white-space:pre-wrap;word-break:break-word;font-size:13.5px}
+.att{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:11px;margin-bottom:6px;font-size:13.5px}
+.att .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.assess-h{background:var(--navy-soft);border-radius:18px 18px 0 0;padding:16px 22px;border-bottom:1px solid var(--line)}
+.assess-h h3{font-size:15px;font-weight:700;color:var(--navy)}
+.assess-h div{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+/* мастер */
+.wz-bar{position:absolute;left:0;right:0;top:0;height:5px;background:var(--line-2);border-radius:18px 18px 0 0;overflow:hidden}
+.wz-bar div{height:100%;background:var(--gold);transition:width .35s ease}
+.wz{display:grid;grid-template-columns:270px minmax(0,1fr);gap:22px;align-items:start}
+.wz-steps{padding:12px 10px;position:sticky;top:18px}
+.wz-step{display:flex;gap:11px;align-items:center;padding:8px 10px;border-radius:10px;font-size:13.5px;color:var(--muted);line-height:1.3}
+.wz-step[data-jump]:not([data-jump=""]){cursor:pointer}
+.wz-step .n{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;background:#fff}
+.wz-step.done{color:var(--ink-2)} .wz-step.done .n{background:var(--navy);border-color:var(--navy);color:#fff}
+.wz-step.cur{background:var(--gold-soft);color:var(--navy-deep);font-weight:600} .wz-step.cur .n{border-color:var(--gold);background:var(--gold);color:var(--navy-deep)}
+.wz-main{padding:40px 40px 36px;position:relative}
+.wz-k{font-size:13px;font-weight:600;color:var(--gold)}
+.wz-q{font-size:28px;font-weight:700;margin:8px 0 10px;line-height:1.25;letter-spacing:-.015em;max-width:30ch}
+.wz-hint{color:var(--muted);margin-bottom:6px;max-width:70ch}
+.wz-ex{font-size:13.5px;color:var(--muted);border-left:3px solid var(--gold);background:var(--surface-2);border-radius:0 10px 10px 0;padding:9px 14px;margin:14px 0 20px;max-width:72ch}
+.wz-ex b{color:var(--ink-2);font-weight:600}
+.wz-main .textarea{min-height:200px;font-size:15.5px}
+.wz-main .input{font-size:15.5px;padding:12px 15px}
+.wz-nav{display:flex;gap:10px;margin-top:24px;align-items:center}
+.wz-nav .sp{flex:1}
+.req{color:var(--danger)}
+.tagbox{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:8px;background:#fff;min-height:50px}
+.tagbox:focus-within{border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(11,42,134,.12)}
+.tagbox input{border:0;outline:0;flex:1;min-width:160px;padding:4px 6px;font-size:15.5px}
+.tagbox .tag button{border:0;background:none;color:inherit;cursor:pointer;padding:0 0 0 5px;font-size:14px;line-height:1}
+.sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.sugg button{border:1px dashed #B9C2DA;background:#fff;color:var(--navy);border-radius:8px;padding:4px 10px;font-size:13px;cursor:pointer}
+.sugg button:hover{border-color:var(--navy);background:var(--navy-soft)}
+.review .sec h4{display:flex;justify-content:space-between}
+.review .sec h4 a{font-weight:500}
+
+.tabs{display:flex;gap:4px;margin-top:22px;margin-bottom:-30px;overflow-x:auto}
+.tabs a{padding:10px 16px;color:rgba(255,255,255,.65);font-weight:600;border-radius:11px 11px 0 0;white-space:nowrap;text-decoration:none}
+.tabs a:hover{color:#fff}
+.tabs a.on{background:var(--paper);color:var(--navy)}
+
+/* вход */
+.auth{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.auth-l{background:var(--navy);color:#fff;padding:48px 56px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.auth-l img{width:150px;margin-left:-10px;clip-path:inset(0 6% 0 0)}
+.auth-l h1{font-family:var(--display);font-weight:600;font-size:44px;line-height:1.08;letter-spacing:-.025em;margin-top:auto;max-width:13ch}
+.auth-l p{color:rgba(255,255,255,.7);font-size:16px;max-width:42ch;margin:18px 0 0}
+.auth-l .foot{margin-top:48px;font-size:12.5px;color:rgba(255,255,255,.45)}
+.auth-l .ring{position:absolute;right:-180px;top:-160px;width:520px;height:520px;border-radius:50%;border:1px solid rgba(227,178,60,.25)}
+.auth-l .ring.r2{right:-120px;top:-100px;width:400px;height:400px;border-color:rgba(255,255,255,.07)}
+.auth-r{display:grid;place-items:center;padding:32px;background:var(--surface)}
+.auth-f{width:100%;max-width:380px}
+.auth-f h2{font-size:26px;font-weight:700;letter-spacing:-.015em}
+
+.toast-wrap{position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:8px;z-index:50}
+.toast{background:var(--navy-deep);color:#fff;padding:12px 16px 12px 14px;border-radius:12px;box-shadow:0 14px 34px rgba(0,14,64,.3);font-size:13.5px;max-width:380px;border-left:3px solid var(--gold);animation:tin .2s}
+.toast.err{border-left-color:#FF6B6B}
+@keyframes tin{from{transform:translateY(8px);opacity:0}}
+.spinner{display:grid;place-items:center;padding:60px;color:var(--muted)}
+.callout{background:var(--gold-soft);border-left:3px solid var(--gold);color:#4A3608;border-radius:0 12px 12px 0;padding:12px 16px;font-size:13.5px;margin-bottom:18px}
+
+/* единственный оркестрованный момент: загрузка дашборда */
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.intro .river-bar div{animation:grow .7s cubic-bezier(.2,.7,.2,1) both}
+.intro .hero-h,.intro .hero-s{animation:rise .5s ease both}
+.intro .hero-s{animation-delay:.08s}
+@media (prefers-reduced-motion:reduce){.intro *{animation:none!important}.wz-bar div{transition:none}}
+
+@media (max-width:1280px){.hero{grid-template-columns:1fr}.stats{grid-template-columns:repeat(5,minmax(0,1fr))}.stat{padding:2px 16px}.d-grid{grid-template-columns:1fr}}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;align-items:center;padding:10px 14px;gap:8px;overflow-x:auto}
+  .brand{padding:0}.brand img{width:64px;margin:0}.brand-sub{display:none}
+  .nav{flex-direction:row}.nav a span.t{display:none}.nav a.on::before{left:8px;right:8px;top:auto;bottom:-10px;width:auto;height:3px;border-radius:3px 3px 0 0}
+  .cta{margin:0;padding:9px 12px}.cta span{display:none}
+  .me{margin:0 0 0 auto;border:0;padding:0}.me .who{display:none}
+  .band{padding:20px 16px 24px}.band.tall{padding-bottom:70px}.content{padding:16px 16px 40px}.demo-bar{padding:8px 16px}
+  .g-2,.g-3,.g-21,.grid2{grid-template-columns:1fr}
+  .hero-h{font-size:32px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));border-left:0;gap:14px 0}
+  .stat{border-right:0;border-left:1px solid rgba(255,255,255,.14);padding:2px 14px}
+  .d-hero{grid-template-columns:1fr}.d-dl{text-align:left}.d-title{font-size:21px}
+  .wz{grid-template-columns:1fr}.wz-steps{display:none}.wz-main{padding:24px 18px}.wz-q{font-size:21px}
+  .kv{grid-template-columns:1fr}
+  .auth{grid-template-columns:1fr}.auth-l{padding:28px 22px}.auth-l h1{font-size:30px;margin-top:40px}.auth-l .foot{display:none}
+}
+
+/* ---------- v3: свечение, стекло, Гант, палитра команд ---------- */
+.band.glow{overflow:hidden;isolation:isolate;background:radial-gradient(rgba(255,255,255,.055) 1px,transparent 1.2px) 0 0/22px 22px,var(--navy)}
+.band.glow::before{content:"";position:absolute;right:-180px;top:-320px;width:900px;height:760px;background:radial-gradient(closest-side,rgba(227,178,60,.34),rgba(227,178,60,0) 70%);z-index:-1;animation:drift 24s ease-in-out infinite alternate;pointer-events:none}
+.band.glow::after{content:"";position:absolute;left:-260px;bottom:-360px;width:900px;height:700px;background:radial-gradient(closest-side,rgba(64,112,255,.38),rgba(64,112,255,0) 70%);z-index:-1;animation:drift2 28s ease-in-out infinite alternate;pointer-events:none}
+@keyframes drift{to{transform:translate(-220px,120px) scale(1.12)}}
+@keyframes drift2{to{transform:translate(240px,-80px) scale(1.05)}}
+.glow .stats{border:0;display:grid;grid-template-columns:repeat(3,minmax(118px,1fr));gap:10px}
+.glow .stat{border:1px solid rgba(255,255,255,.14);background:linear-gradient(160deg,rgba(255,255,255,.11),rgba(255,255,255,.03));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:16px;padding:14px 16px 13px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.glow .stat.wide{grid-column:span 2}
+.glow .stat .l{white-space:normal}
+.river-bar div,.river-l span{cursor:pointer}
+.river-bar div:hover{filter:brightness(1.15)}
+[data-drill]{cursor:pointer}
+.bar-row[data-drill]:hover .l{color:var(--navy-2);text-decoration:underline}
+
+.side-tools{display:flex;gap:6px;margin-top:10px}
+.search-btn{flex:1;display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.65);cursor:pointer;font-size:13.5px}
+.search-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.search-btn svg{width:16px;height:16px}
+.search-btn kbd{margin-left:auto;font:600 11px Onest,sans-serif;border:1px solid rgba(255,255,255,.2);border-radius:5px;padding:1px 5px;color:rgba(255,255,255,.6)}
+.shell.mini{grid-template-columns:84px 1fr}
+.shell.mini .brand img{width:58px;margin:0 auto}
+.shell.mini .brand-sub,.shell.mini .nav .t,.shell.mini .cta span,.shell.mini .me .who,.shell.mini .search-btn span,.shell.mini .search-btn kbd{display:none}
+.shell.mini .nav a{justify-content:center;padding:11px 0}
+.shell.mini .nav .count{position:absolute;top:3px;right:6px;padding:0 5px;font-size:10px;line-height:16px}
+.shell.mini .search-btn{justify-content:center;padding:9px 0}
+.shell.mini .side-tools{flex-direction:column}
+.shell.mini .me{flex-direction:column;gap:6px}
+.shell.mini .brand{padding:0}
+
+/* Гант */
+.gantt{position:relative;overflow:auto;-webkit-overflow-scrolling:touch}
+.g-inner{position:relative}
+.g-head{position:sticky;top:0;z-index:6;display:flex;background:var(--surface);border-bottom:1px solid var(--line)}
+.g-corner{position:sticky;left:0;z-index:7;width:var(--lw);flex:none;background:var(--surface);border-right:1px solid var(--line);padding:0 18px 9px;font-size:12.5px;color:var(--muted);font-weight:600;display:flex;align-items:flex-end}
+.g-scale{position:relative;height:56px;flex:none}
+.g-month{position:absolute;top:0;height:100%;border-left:1px solid var(--line);padding:8px 0 0 9px;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap}
+.g-tick{position:absolute;bottom:8px;font-size:11px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.g-tick.we{color:#AEB4C8}
+.g-pill{position:absolute;bottom:4px;transform:translateX(-50%);background:var(--gold);color:var(--navy-deep);font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap;z-index:2}
+.g-row{display:flex;height:54px}
+.g-row>div{border-bottom:1px solid var(--line-2)}
+.g-row:hover .g-lab,.g-row:hover .g-track{background:#F7F9FD}
+.g-lab{position:sticky;left:0;z-index:4;width:var(--lw);flex:none;background:var(--surface);border-right:1px solid var(--line);padding:0 18px;display:flex;align-items:center;gap:11px;cursor:pointer;min-width:0}
+.g-lab .av{width:28px;height:28px;border-radius:50%;background:var(--navy-soft);color:var(--navy);display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.g-lab .av.none{background:transparent;border:1.5px dashed #C3C9DA;color:#A3AAC2}
+.g-lab .tx{min-width:0}
+.g-lab .t{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.g-lab .s{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-track{position:relative;flex:none}
+.g-wend{position:absolute;top:0;bottom:0;background:rgba(0,25,102,.028);pointer-events:none}
+.g-msep{position:absolute;top:0;bottom:0;width:1px;background:var(--line);pointer-events:none}
+.g-bar{position:absolute;top:13px;height:28px;border-radius:9px;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 88%,#fff),var(--c));color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;padding:0 10px;white-space:nowrap;overflow:hidden;cursor:pointer;box-shadow:0 8px 16px -10px var(--c),inset 0 1px 0 rgba(255,255,255,.25);transition:transform .15s,box-shadow .15s;z-index:1}
+.g-bar:hover{transform:translateY(-1px);box-shadow:0 12px 22px -10px var(--c),inset 0 1px 0 rgba(255,255,255,.25)}
+.g-bar.tbd{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 16%,#fff) 0 6px,color-mix(in srgb,var(--c) 8%,#fff) 6px 12px);color:color-mix(in srgb,var(--c) 70%,#000);border:1.5px dashed color-mix(in srgb,var(--c) 55%,#fff);box-shadow:none}
+.g-bar.done{opacity:.55}
+.g-over{position:absolute;top:13px;height:28px;border-radius:0 9px 9px 0;background:repeating-linear-gradient(135deg,#D23B3B 0 5px,#EC7B7B 5px 10px);pointer-events:none}
+.g-out{position:absolute;top:18px;font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap;pointer-events:none}
+.g-ms{position:absolute;top:20px;width:13px;height:13px;background:var(--gold);transform:rotate(45deg);border:2px solid #fff;box-shadow:0 0 0 1px var(--gold);z-index:2;cursor:help}
+.g-today{position:absolute;top:56px;bottom:0;width:2px;background:var(--gold);z-index:3;pointer-events:none;box-shadow:0 0 12px rgba(201,147,15,.6)}
+.g-grp{display:flex;height:38px}
+.g-grp>div{border-bottom:1px solid var(--line);background:var(--surface-2)}
+.g-grp .g-lab{background:var(--surface-2);font-size:12.5px;font-weight:700;color:var(--navy);cursor:default}
+.g-grp .g-lab i{width:8px;height:8px;border-radius:3px;background:var(--c,var(--navy))}
+.g-grp .g-lab span{color:var(--muted);font-weight:600}
+.g-tip{position:fixed;z-index:80;background:var(--navy-deep);color:#fff;border-radius:12px;padding:11px 13px;font-size:12.5px;line-height:1.5;pointer-events:none;box-shadow:0 18px 40px rgba(0,14,64,.35);max-width:320px;border-top:2px solid var(--gold);white-space:pre-line}
+.g-tip b{display:block;font-size:13px;margin-bottom:3px}
+.seg{display:inline-flex;background:var(--line-2);border-radius:11px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 13px;border-radius:9px;font-weight:600;font-size:13px;color:var(--muted);cursor:pointer}
+.seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(0,25,102,.12)}
+.tl-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.tl-legend{display:flex;flex-wrap:wrap;gap:8px 18px;padding:12px 18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2)}
+.tl-legend span{display:inline-flex;align-items:center;gap:7px}
+.lg-bar{width:22px;height:10px;border-radius:3px;background:var(--c)}
+.lg-tbd{width:22px;height:10px;border-radius:3px;border:1.5px dashed #8A93AE;background:repeating-linear-gradient(135deg,#EEF0F6 0 4px,#fff 4px 8px)}
+.lg-over{width:22px;height:10px;border-radius:3px;background:repeating-linear-gradient(135deg,#D23B3B 0 4px,#EC7B7B 4px 8px)}
+.lg-ms{width:10px;height:10px;background:var(--gold);transform:rotate(45deg)}
+.lg-today{width:2px;height:14px;background:var(--gold)}
+.band-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.band-chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:99px;padding:5px 12px;font-size:13px;color:rgba(255,255,255,.8)}
+.band-chip b{color:#fff;font-family:var(--display);font-weight:600;margin-right:4px}
+.band-chip.alert b{color:#FF8A8A}
+
+/* палитра */
+.pal-bg{position:fixed;inset:0;background:rgba(0,14,64,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:90;display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.pal{width:100%;max-width:640px;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,14,64,.45);overflow:hidden;animation:pop .18s cubic-bezier(.2,.8,.2,1)}
+@keyframes pop{from{transform:translateY(-8px) scale(.98);opacity:0}}
+.pal input{width:100%;border:0;outline:0;padding:20px 22px;font-size:17px;border-bottom:1px solid var(--line)}
+.pal-list{max-height:52vh;overflow:auto;padding:8px}
+.pal-it{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;cursor:pointer}
+.pal-it.on{background:var(--navy-soft)}
+.pal-it .ic{width:30px;height:30px;border-radius:9px;background:var(--line-2);display:grid;place-items:center;font-size:14px;flex:none}
+.pal-it .t{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pal-it .s{font-size:12px;color:var(--muted)}
+.pal-sec{font-size:12px;color:var(--muted);font-weight:600;padding:10px 12px 4px}
+.pal-foot{display:flex;gap:16px;padding:10px 18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);background:var(--surface-2)}
+.pal-foot kbd{font:600 11px Onest,sans-serif;border:1px solid var(--line);border-radius:5px;padding:1px 5px;background:#fff;color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){.band.glow::before,.band.glow::after{animation:none}}
+@media (max-width:900px){.side-tools{margin:0}.search-btn span,.search-btn kbd{display:none}.search-btn{padding:9px}.glow .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.glow .stat.wide{grid-column:span 2}.collapse-btn{display:none}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* =====================================================================
+   НАСТРОЙКИ — заполните после создания проекта Supabase
+   (Project Settings → API). Пока пусто — работает демо-режим.
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: 'https://ptzvlfcvmhlgmmkxfhji.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_iMVfLPD6E6qG1-ATapXMDQ_6os0Q55c',
+  TG_BOT_USERNAME: '',       // имя бота без @, например cau_pgc_bot
+};
+const DEMO = !CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY;
+const LOGO = 'data:image/png;base64,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';
+
+/* ---------- справочники ---------- */
+const ENUM = {
+  category: ['Организационная','Операционная','Академическая','Финансовая','Кадровая','Инфраструктурная','ИТ / цифровизация','Юридическая / комплаенс','Коммуникационная','Проектная','Другое'],
+  priority: ['Критический','Высокий','Средний','Низкий'],
+  urgency:  ['Немедленно','До 7 дней','До 30 дней','Планово'],
+  scale:    ['Весь университет','Несколько подразделений','Одно подразделение','Отдельный процесс'],
+  decision_level: ['На уровне подразделения','Межфункциональное согласование','На уровне проректора','Требуется решение ректора'],
+  rector_decision: ['Да','Нет','Требуется уточнение'],
+  status:   ['Новая','На оценке','В работе','Ожидает решения','Заблокирована','Выполнена','Закрыта'],
+};
+const STATUS_C = {'Новая':'#5B7CFA','На оценке':'#8A6CF0','В работе':'#22A3E0','Ожидает решения':'#E3B23C','Заблокирована':'#E25555','Выполнена':'#2DBE82','Закрыта':'#8C95B0'};
+const PRIO_C = {'Критический':'#D23B3B','Высокий':'#E06A1B','Средний':'#B8860B','Низкий':'#2E9E6B'};
+const ROLE_L = {admin:'Администратор', leadership:'Руководство', member:'Сотрудник'};
+const CLOSED = ['Выполнена','Закрыта'];
+const isOpen = p => !CLOSED.includes(p.status);
+
+/* ---------- утилиты ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+const fmtD = d => d ? new Date(String(d).length === 10 ? d + 'T00:00:00' : d).toLocaleDateString('ru-RU') : '—';
+const fmtDT = d => d ? new Date(d).toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+const daysTo = d => d ? Math.round((new Date(d + 'T00:00:00') - new Date(todayISO() + 'T00:00:00')) / 864e5) : null;
+const initials = n => (n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase();
+const linkify = t => h(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const plural = (n, a, b, c) => { n = Math.abs(n) % 100; const n1 = n % 10; return n > 10 && n < 20 ? c : n1 > 1 && n1 < 5 ? b : n1 === 1 ? a : c; };
+function toast(msg, err) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), err ? 6000 : 3200); }
+function errMsg(e) {
+  const m = e?.message || String(e);
+  if (/Invalid login credentials/i.test(m)) return 'Неверный email или пароль';
+  if (/Email not confirmed/i.test(m)) return 'Подтвердите email по ссылке из письма';
+  if (/User already registered/i.test(m)) return 'Пользователь уже зарегистрирован — войдите';
+  if (/Database error saving new user/i.test(m)) return 'Регистрация доступна только для почты @centralasian.uz';
+  if (/Password should be/i.test(m)) return 'Пароль должен быть не короче 6 символов';
+  return m;
+}
+const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+             set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+             del(k) { try { localStorage.removeItem(k); } catch {} } };
+function enrich(p) {
+  const dl = daysTo(p.agreed_deadline);
+  return { ...p, days_left: dl, is_overdue: dl !== null && dl < 0 && isOpen(p) };
+}
+const ICON = {
+  dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+  list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>',
+  me:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  admin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>',
+  out:  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
+  dl:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/></svg>',
+  gantt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4v16h18"/><path d="M7 8h7M10 12h8M7 16h5"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  side: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>',
+};
+
+/* =====================================================================
+   API: Supabase
+   ===================================================================== */
+function SupaAPI() {
+  const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  const ok = ({ data, error }) => { if (error) throw error; return data; };
+  const redirect = location.origin + location.pathname;
+  return {
+    async session() { return (await sb.auth.getSession()).data.session; },
+    onAuth(cb) { sb.auth.onAuthStateChange((ev) => cb(ev)); },
+    async signIn(email, password) { ok(await sb.auth.signInWithPassword({ email, password })); },
+    async signUp(email, password, full_name) { return ok(await sb.auth.signUp({ email, password, options: { data: { full_name }, emailRedirectTo: redirect } })); },
+    async magic(email) { ok(await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect } })); },
+    async signOut() { await sb.auth.signOut(); },
+    async me() { const { data: { user } } = await sb.auth.getUser(); return ok(await sb.from('profiles').select('*').eq('id', user.id).single()); },
+    async profiles() { return ok(await sb.from('profiles').select('*').order('full_name')); },
+    async problems() { return ok(await sb.from('problems_view').select('*').order('id', { ascending: false })).map(enrich); },
+    async problem(id) { return enrich(ok(await sb.from('problems_view').select('*').eq('id', id).single())); },
+    async activity(id) { return ok(await sb.from('activity').select('*, author:profiles(full_name,email)').eq('problem_id', id).order('created_at')); },
+    async attachments(id) { return ok(await sb.from('attachments').select('*').eq('problem_id', id).order('created_at')); },
+    async create(row) { return ok(await sb.from('problems').insert(row).select().single()); },
+    async update(id, patch) { const d = ok(await sb.from('problems').update(patch).eq('id', id).select()); if (!d.length) throw new Error('Нет прав на изменение'); return d[0]; },
+    async addActivity(problem_id, kind, body) { ok(await sb.from('activity').insert({ problem_id, kind, body })); },
+    async upload(problem_id, file) {
+      const path = `${problem_id}/${Date.now()}_${file.name.replace(/[^\w.\-]+/g, '_')}`;
+      ok(await sb.storage.from('materials').upload(path, file));
+      ok(await sb.from('attachments').insert({ problem_id, path, name: file.name, size: file.size }));
+    },
+    async fileUrl(path) { return ok(await sb.storage.from('materials').createSignedUrl(path, 3600)).signedUrl; },
+    async questions() { return ok(await sb.from('form_questions').select('*').order('sort')); },
+    async saveQuestion(q) { ok(await sb.from('form_questions').update({ question: q.question, hint: q.hint, example: q.example, required: q.required }).eq('field_key', q.field_key)); },
+    async departments() { return ok(await sb.from('departments').select('*').order('name')); },
+    async addDepartment(name) { ok(await sb.from('departments').insert({ name })); },
+    async delDepartment(id) { ok(await sb.from('departments').delete().eq('id', id)); },
+    async updateProfile(id, patch) { ok(await sb.from('profiles').update(patch).eq('id', id)); },
+    async tgToken() { return ok(await sb.rpc('my_tg_token')); },
+  };
+}
+
+/* =====================================================================
+   API: демо (данные в памяти браузера, ничего не сохраняется на сервер)
+   ===================================================================== */
+function DemoAPI() {
+  const plus = n => { const d = new Date(); d.setDate(d.getDate() + n); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+  const P = [
+    { id: 'u-bobur', email: 'b.gafurov@centralasian.uz', full_name: 'Бобур Гафуров', position: 'Координатор PGC', department: 'Ректорат', role: 'admin', tg_connected: true },
+    { id: 'u-amal', email: 'amal@egox.tech', full_name: 'Амаль Баширов', position: 'Product Manager', department: 'CAU App', role: 'admin', tg_connected: true },
+    { id: 'u-moh', email: 'mohchehra@centralasian.uz', full_name: 'Мохчехра', position: 'Академический отдел', department: 'Академический отдел / Quality Assurance', role: 'member', tg_connected: false },
+    { id: 'u-reg', email: 'registrar@centralasian.uz', full_name: 'Офис регистратора', position: 'Регистратор', department: 'Офис регистратора', role: 'member', tg_connected: false },
+  ];
+  const base = { applicant_name: 'Амаль Баширов', applicant_position: 'Product Manager', applicant_department: 'CAU App', submitted_by: 'u-amal', submitted_on: todayISO(), desired_deadline: null, category: null, priority: null, urgency: null, scale: null, decision_level: null, lead_department: '', related_departments: [], responsible_id: null, agreed_deadline: null, rector_decision: null, next_step: '', control_date: null, coordinator_comment: '', closed_at: null };
+  const now = new Date().toISOString();
+  let seq = 3, aseq = 0;
+  const probs = [
+    { ...base, id: 1, created_at: now, submitted_on: plus(-12), status: 'В работе', category: 'Академическая', priority: 'Критический', urgency: 'Немедленно', scale: 'Весь университет', decision_level: 'Требуется решение ректора', lead_department: 'Академический отдел / Quality Assurance', related_departments: ['CAU App', 'Офис регистратора', 'Medical School'], responsible_id: 'u-moh', agreed_deadline: plus(5), rector_decision: 'Да', next_step: 'Свести итоговую шкалу по школам и прогнать текущие баллы', control_date: plus(2),
+      title: 'Marking Scale: потеря оценок D+ / D / D- после смены cutline (70 — Medical School, 60 — остальные школы)',
+      description: '• По предложенной модели Мохчехры проходной балл (cutline) изменён: 70 — в Medical School, 60 — во всех остальных школах.\n• Есть риск, что при новой шкале диапазон оценок D+ / D / D- выпадает: в Medical School баллы 60–69 оказываются ниже проходного и превращаются в F; в остальных школах диапазон D может быть сжат или не прописан в новой модели.\n• Требуется подтвердить: сохраняются ли D+ / D / D- в новой модели, какие процентные границы и Grade Points им соответствуют в каждой школе.\n• Семестр заканчивается — без утверждённой шкалы невозможно сгенерировать Main Grade.',
+      impact: '• Генерация Main Grade за текущий семестр\n• Расчёт GPA (D = положительные Grade Points, F = 0)\n• Академический статус студентов, пересдачи, транскрипты\n• Настройки шкалы и генерация Main Grade в CAU App',
+      consequences: '• Задержка выставления итоговых оценок по всему университету\n• Некорректные оценки и GPA → массовые апелляции и пересчёты\n• Рост числа F и пересдач, снижение AVG GPA\n• Репутационные риски и риски аккредитации из-за несогласованной шкалы',
+      desired_deadline_note: 'Немедленно — до генерации Main Grade (конец семестра)',
+      proposed_solution: '1. Свести в одну таблицу итоговую шкалу для каждой школы: буква → % диапазон → Grade Points.\n2. С Мохчехрой подтвердить судьбу D+ / D / D- (сохранить или осознанно убрать).\n3. Прогнать текущие баллы студентов через новую шкалу и сравнить с прежней.\n4. Утвердить шкалу и настроить её в CAU App до генерации Main Grade.',
+      involved_departments: ['CAU App', 'Офис регистратора', 'Medical School', 'Деканаты остальных школ', 'Академический отдел / Quality Assurance'],
+      contacts: 'Мохчехра (автор модели); Амаль Баширов; регистратор; деканы школ; команда CAU App (настройка шкалы)',
+      materials: 'Предложенная модель Marking Scale (Мохчехра); текущая шкала оценок' },
+    { ...base, id: 2, created_at: now, submitted_on: plus(-6), desired_deadline: plus(10), status: 'На оценке', category: 'Операционная', priority: 'Высокий', urgency: 'До 7 дней',
+      title: 'Mapping студентов 2-го курса: корректный enrollment и расчёт суммы контракта',
+      description: '• Для студентов 2-го курса не завершён mapping (соответствие программы / учебного плана / курсов и кредитов студента в CAU App).\n• От mapping зависит, на какие курсы студент будет зачислен (enrollment) и какая сумма контракта будет ему начислена.\n• Пока mapping не решён, есть риск неверного зачисления на курсы и ошибок в суммах контрактов для всего второго курса.',
+      impact: '• Enrollment всех студентов 2-го курса\n• Сумма контракта и выставление счетов\n• Расписание и наполненность групп\n• Финансовая отчётность университета',
+      consequences: '• Студенты зачислены не на те курсы / не в те группы\n• Неверные суммы контрактов → переоформление договоров, возвраты или недополученная выручка\n• Жалобы студентов и родителей, нагрузка на регистратора и финансы\n• Задержка старта следующего семестра для 2-го курса',
+      desired_deadline_note: 'До открытия enrollment и выставления контрактов на следующий семестр',
+      proposed_solution: '1. Составить единую mapping-таблицу: студент → программа → учебный план → курсы / кредиты → сумма контракта.\n2. Сверить её с данными регистратора и финансового отдела.\n3. Проверить на выборке студентов до массовой загрузки.\n4. После подтверждения — загрузить в CAU App.',
+      involved_departments: ['CAU App', 'Офис регистратора', 'Финансовый отдел / бухгалтерия', 'Отдел контрактов', 'Деканаты'],
+      contacts: 'Амаль Баширов; регистратор; финансовый отдел; команда CAU App',
+      materials: 'Список студентов 2-го курса; учебные планы; прайс / методика расчёта контракта' },
+    { ...base, id: 3, created_at: now, submitted_on: plus(-2), status: 'Новая',
+      title: 'Attendance Bonus: перенос +10 баллов внутрь 100 (90 + 10 за ежедневные вопросы после урока)',
+      description: '• Сейчас: к 100 баллам за курс студент дополнительно получает до +10 баллов attendance-бонуса.\n• Требование Мохчехры: включить эти 10 баллов внутрь 100 — 90 баллов за академическую часть и 10 баллов за ежедневную активность.\n• Механика: после каждого урока каждый студент отвечает на 4 вопроса (например, «Что вы сегодня изучали?»), по ответам выставляется балл.\n• Вопросы и критерии оценивания ответов пока не разработаны.',
+      impact: '• Итоговые оценки и AVG GPA университета\n• Силлабусы всех курсов (структура оценивания)\n• Нагрузка на преподавателей и студентов\n• CAU App (сбор ответов и выставление баллов)',
+      consequences: '• Снижение AVG GPA: бонус перестаёт быть «сверху»\n• Рост числа F и пересдач (в сочетании с новыми cutline 70 / 60)\n• Без готовых вопросов и критериев — субъективное оценивание и апелляции\n• Смена правил в середине учебного года — претензии студентов',
+      desired_deadline_note: 'Решение — до начала следующего семестра (не вводить в текущем)',
+      proposed_solution: '1. Смоделировать на данных текущего семестра: оценки и AVG GPA при 100 + 10 vs 90 + 10 внутри.\n2. Разработать 4 вопроса и рубрику, автоматизировать сбор в CAU App.\n3. Пилот на нескольких курсах.\n4. Утвердить изменения в силлабусах с начала семестра.',
+      involved_departments: ['CAU App', 'Академический отдел / Quality Assurance', 'Деканаты школ', 'Преподаватели', 'Офис регистратора'],
+      contacts: 'Мохчехра (инициатор); Амаль Баширов; деканы школ; команда CAU App',
+      materials: 'Требование Мохчехры по attendance-бонусу; текущие силлабусы' },
+  ];
+  const act = [];
+  const log = (problem_id, author_id, kind, body = '', old_value = null, new_value = null) => act.push({ id: ++aseq, problem_id, author_id, kind, body, old_value, new_value, created_at: new Date().toISOString() });
+  probs.forEach(p => log(p.id, 'u-amal', 'created', 'Проблема подана'));
+  log(1, 'u-bobur', 'assign', '', null, 'Мохчехра'); log(1, 'u-bobur', 'status', '', 'На оценке', 'В работе');
+  log(1, 'u-moh', 'comment', 'Начала сводить шкалу по всем школам, к четвергу будет черновик.');
+  const atts = [];
+  const qs = [
+    ['title', 1, 'Краткое название проблемы', 'Как назвать проблему одной строкой?', 'Коротко и по сути — так, чтобы было понятно из списка.', 'Mapping студентов 2-го курса: enrollment и сумма контракта', 'text', true],
+    ['description', 2, 'Описание проблемы / факты', 'Что именно происходит?', 'С какого времени, кого затрагивает, какие факты и цифры. Факты вместо общих формулировок.', 'С начала семестра у 2-го курса не завершён mapping учебных планов — 340 студентов не могут быть зачислены на курсы.', 'textarea', true],
+    ['impact', 3, 'На что влияет проблема', 'На какие процессы, показатели или людей влияет проблема?', 'Перечислите процессы, системы, группы людей.', 'Enrollment, суммы контрактов, расписание', 'textarea', true],
+    ['consequences', 4, 'Последствия, если не решить', 'Что произойдёт, если проблему не решить?', 'Когда это станет критичным и к чему приведёт.', 'Неверные суммы контрактов, жалобы родителей, задержка старта семестра', 'textarea', true],
+    ['desired_deadline', 5, 'Желаемый срок решения', 'К какой дате нужно решение и почему?', 'Укажите дату, если она известна, и что к ней привязано. Финальный срок согласует координатор PGC.', 'До открытия enrollment', 'date', false],
+    ['proposed_solution', 6, 'Предлагаемое решение', 'Как вы видите решение? Какие шаги предлагаете?', 'Можно пошагово. Подача не означает утверждения решения или бюджета.', '1. Свести mapping-таблицу 2. Сверить с регистратором 3. Загрузить', 'textarea', false],
+    ['involved_departments', 7, 'Какие подразделения вовлечены', 'Какие подразделения должны участвовать или зависят от проблемы?', 'Введите название и нажмите Enter. Можно выбрать из подсказок или вписать своё.', 'Офис регистратора, Финансовый отдел', 'tags', true],
+    ['contacts', 8, 'Контактные лица / участники', 'Кого нужно привлечь и в какой роли?', 'ФИО и роль каждого участника.', 'Регистратор — данные студентов; финансовый отдел — расчёт контрактов', 'textarea', false],
+    ['materials', 9, 'Материалы / ссылка', 'Есть ли документы, таблицы или скриншоты?', 'Вставьте ссылки и/или прикрепите файлы.', 'https://docs.google.com/...', 'files', false],
+  ].map(([field_key, sort, label, question, hint, example, kind, required]) => ({ field_key, sort, label, question, hint, example, kind, required }));
+  let depts = ['CAU App', 'Офис регистратора', 'Medical School', 'Финансовый отдел / бухгалтерия', 'Отдел контрактов', 'Академический отдел / Quality Assurance', 'ИТ', 'HR', 'Приёмная комиссия', 'Студенческий офис', 'Ректорат', 'Юридический отдел'].map((name, i) => ({ id: i + 1, name }));
+  let me = ls.get('pgc_demo_user', 'u-amal');
+  const meP = () => P.find(p => p.id === me);
+  const name = id => P.find(p => p.id === id)?.full_name || null;
+  const view = p => enrich({ ...p, responsible_name: name(p.responsible_id), responsible_email: P.find(x => x.id === p.responsible_id)?.email, submitter_name: name(p.submitted_by) });
+  const clone = x => JSON.parse(JSON.stringify(x));
+  const ASSESS = ['category','priority','urgency','scale','decision_level','lead_department','related_departments','responsible_id','agreed_deadline','rector_decision','next_step','status','control_date','coordinator_comment'];
+  return {
+    demoUsers: P, setDemoUser(id) { me = id; ls.set('pgc_demo_user', id); },
+    async session() { return { user: { id: me } }; }, onAuth() {},
+    async signIn() {}, async signUp() {}, async magic() {}, async signOut() { toast('В демо-режиме выход недоступен'); },
+    async me() { return clone(meP()); },
+    async profiles() { return clone(P); },
+    async problems() { return probs.map(view).sort((a, b) => b.id - a.id); },
+    async problem(id) { const p = probs.find(x => x.id == id); if (!p) throw new Error('Не найдено'); return view(p); },
+    async activity(id) { return act.filter(a => a.problem_id == id).map(a => ({ ...a, author: P.find(p => p.id === a.author_id) })); },
+    async attachments(id) { return atts.filter(a => a.problem_id == id); },
+    async create(row) {
+      const admin = meP().role === 'admin';
+      const p = { ...base, ...row, id: ++seq, created_at: new Date().toISOString(), submitted_by: me, status: 'Новая' };
+      if (!admin) ASSESS.forEach(k => { if (k !== 'status') p[k] = base[k]; });
+      probs.push(p); log(p.id, me, 'created', 'Проблема подана'); return clone(p);
+    },
+    async update(id, patch) {
+      const p = probs.find(x => x.id == id); const admin = meP().role === 'admin';
+      if (!admin && !(p.submitted_by === me && p.status === 'Новая')) throw new Error('Нет прав на изменение');
+      if (!admin && ASSESS.some(k => k in patch && JSON.stringify(patch[k]) !== JSON.stringify(p[k]))) throw new Error('Оценку PGC, статус, ответственного и дедлайн меняют только администраторы');
+      const old = { ...p }; Object.assign(p, patch);
+      if (p.responsible_id && p.agreed_deadline && ['Новая', 'На оценке'].includes(p.status) && (old.responsible_id !== p.responsible_id || old.agreed_deadline !== p.agreed_deadline)) p.status = 'В работе';
+      p.closed_at = p.status === 'Закрыта' ? (old.status === 'Закрыта' ? old.closed_at : new Date().toISOString()) : null;
+      if (old.status !== p.status) log(id, me, 'status', '', old.status, p.status);
+      if (old.responsible_id !== p.responsible_id) log(id, me, 'assign', '', name(old.responsible_id), name(p.responsible_id));
+      if (old.agreed_deadline !== p.agreed_deadline) log(id, me, 'deadline', '', old.agreed_deadline ? fmtD(old.agreed_deadline) : null, p.agreed_deadline ? fmtD(p.agreed_deadline) : null);
+      const aKeys = ['category','priority','urgency','scale','decision_level','lead_department','related_departments','rector_decision','next_step','control_date','coordinator_comment'];
+      if (aKeys.some(k => JSON.stringify(old[k]) !== JSON.stringify(p[k]))) log(id, me, 'assessment', 'Обновлена оценка PGC');
+      const eKeys = ['title','description','impact','consequences','desired_deadline','proposed_solution','involved_departments','contacts','materials'];
+      if (eKeys.some(k => JSON.stringify(old[k]) !== JSON.stringify(p[k]))) log(id, me, 'edit', 'Заявка отредактирована');
+      return clone(p);
+    },
+    async addActivity(problem_id, kind, body) {
+      const p = probs.find(x => x.id == problem_id);
+      if (kind === 'done_request' && p.responsible_id !== me) throw new Error('Только ответственный может сообщить о выполнении');
+      log(problem_id, me, kind, body);
+    },
+    async upload(problem_id, file) { atts.push({ id: atts.length + 1, problem_id, path: URL.createObjectURL(file), name: file.name, size: file.size, uploaded_by: me, created_at: new Date().toISOString() }); },
+    async fileUrl(path) { return path; },
+    async questions() { return clone(qs); },
+    async saveQuestion(q) { Object.assign(qs.find(x => x.field_key === q.field_key), q); },
+    async departments() { return clone(depts); },
+    async addDepartment(name) { depts.push({ id: Date.now(), name }); depts.sort((a, b) => a.name.localeCompare(b.name)); },
+    async delDepartment(id) { depts = depts.filter(d => d.id !== id); },
+    async updateProfile(id, patch) { Object.assign(P.find(p => p.id === id), patch); },
+    async tgToken() { return 'demo-token'; },
+  };
+}
+
+const api = DEMO ? DemoAPI() : SupaAPI();
+
+/* =====================================================================
+   Состояние и загрузка
+   ===================================================================== */
+const S = { me: null, profiles: [], problems: [], questions: [], departments: [],
+            filters: ls.get('pgc_filters', { q: '', status: '', priority: '', category: '', dept: '', resp: '', overdue: false, mine: false, assigned: false, sort: 'id', dir: -1 }) };
+const isAdmin = () => S.me?.role === 'admin';
+const FDEF = { q: '', status: '', priority: '', category: '', dept: '', resp: '', overdue: false, mine: false, assigned: false, sort: 'id', dir: -1 };
+function drill(k, v) { S.filters = { ...FDEF, [k]: v }; ls.set('pgc_filters', S.filters); location.hash = '#/registry'; }
+async function loadAll() {
+  [S.me, S.profiles, S.problems, S.questions, S.departments] = await Promise.all([api.me(), api.profiles(), api.problems(), api.questions(), api.departments()]);
+}
+async function reloadProblems() { S.problems = await api.problems(); }
+const profName = id => S.profiles.find(p => p.id === id)?.full_name || '';
+
+/* =====================================================================
+   Общие компоненты
+   ===================================================================== */
+const statusB = s => s ? `<span class="badge dot" style="--c:${STATUS_C[s]}">${h(s)}</span>` : '';
+const prioB = s => s ? `<span class="badge" style="--c:${PRIO_C[s]}">${h(s)}</span>` : '<span class="badge" style="--c:#94A3B8">Без приоритета</span>';
+function dlChip(p) {
+  if (!p.agreed_deadline) return '<span class="dl ok">—</span>';
+  if (!isOpen(p)) return `<span class="dl ok">${fmtD(p.agreed_deadline)}</span>`;
+  const d = p.days_left;
+  if (d < 0) return `<span class="dl over">${fmtD(p.agreed_deadline)}, просрочено ${-d} ${plural(-d, 'день', 'дня', 'дней')}</span>`;
+  if (d === 0) return `<span class="dl over">Сегодня</span>`;
+  if (d <= 3) return `<span class="dl soon">${fmtD(p.agreed_deadline)}, через ${d} ${plural(d, 'день', 'дня', 'дней')}</span>`;
+  return `<span class="dl ok">${fmtD(p.agreed_deadline)}, через ${d} ${plural(d, 'день', 'дня', 'дней')}</span>`;
+}
+const opts = (list, val, empty = '—') => (empty !== null ? `<option value="">${empty}</option>` : '') + list.map(v => `<option ${v === val ? 'selected' : ''}>${h(v)}</option>`).join('');
+const peopleOpts = (val) => `<option value="">— не назначен —</option>` + S.profiles.map(p => `<option value="${p.id}" ${p.id === val ? 'selected' : ''}>${h(p.full_name || p.email)}${p.department ? ' · ' + h(p.department) : ''}</option>`).join('');
+function bars(items, color) {
+  const max = Math.max(1, ...items.map(i => i.value));
+  if (!items.length) return '<div class="empty">Нет данных</div>';
+  return `<div class="bars">${items.map(i => `<div class="bar-row" ${i.drill ? `data-drill="${h(i.drill)}"` : ''}><div class="l" title="${h(i.label)}">${h(i.label)}</div><div class="bar-track"><div class="bar-fill" style="width:${i.value / max * 100}%;${i.value ? 'min-width:4px;' : ''}--c:${i.color || color || 'var(--brand-2)'}"></div></div><div class="v">${i.value}</div></div>`).join('')}</div>`;
+}
+const countBy = (arr, fn) => { const m = new Map(); arr.forEach(x => { const k = fn(x); m.set(k, (m.get(k) || 0) + 1); }); return [...m].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value); };
+function problemLi(p) {
+  return `<div class="li" data-go="p/${p.id}"><div style="flex:1;min-width:0"><div class="li-t"><span class="pill-id">№${p.id}</span> ${h(p.title)}</div>
+    <div class="li-m">${statusB(p.status)}${p.priority ? prioB(p.priority) : ''}${p.responsible_name ? `<span>${h(p.responsible_name)}</span>` : ''}${p.agreed_deadline ? dlChip(p) : ''}</div></div></div>`;
+}
+function bindGo(el) { $$('[data-go]', el).forEach(x => x.addEventListener('click', e => { if (e.target.closest('a,button,select,input')) return; location.hash = '#/' + x.dataset.go; })); }
+
+/* =====================================================================
+   Каркас
+   ===================================================================== */
+function shell(active, title, sub, actions, body, o = {}) {
+  const myOpen = S.problems.filter(p => p.responsible_id === S.me.id && isOpen(p)).length;
+  const queue = S.problems.filter(p => ['Новая', 'На оценке'].includes(p.status)).length;
+  const nav = [
+    ['dashboard', 'Дашборд', ICON.dash], ['registry', 'Реестр проблем', ICON.list], ['timeline', 'Таймлайн', ICON.gantt],
+    ['my', 'Мои задачи', ICON.me, myOpen], ...(isAdmin() ? [['admin', 'Админ PGC', ICON.admin, queue]] : []), ['profile', 'Профиль', ICON.user],
+  ];
+  const demo = DEMO ? `<div class="demo-bar"><b>Демо-режим.</b> Данные живут только в этой вкладке. Смотреть как
+      <select id="demoUser">${api.demoUsers.map(u => `<option value="${u.id}" ${u.id === S.me.id ? 'selected' : ''}>${h(u.full_name)} (${ROLE_L[u.role].toLowerCase()})</option>`).join('')}</select></div>` : '';
+  const band = `<header class="band ${o.tall ? 'tall' : ''} ${o.glow ? 'glow' : ''}">${o.hero || `<div class="band-row"><div><h1>${title}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}<div class="rule"></div></div><div class="actions">${actions || ''}</div></div>`}${o.extra || ''}</header>`;
+  return `<div class="shell ${ls.get('pgc_mini', false) ? 'mini' : ''}">
+    <aside class="side">
+      <a class="brand" href="#/dashboard"><img src="${LOGO}" alt="Central Asian University"></a>
+      <div class="brand-sub"><b>Реестр проблем PGC</b>Координация и контроль решений</div>
+      <nav class="nav">${nav.map(([k, t, ic, c]) => `<a href="#/${k}" class="${active === k ? 'on' : ''}">${ic}<span class="t">${t}</span>${c ? `<span class="count">${c}</span>` : ''}</a>`).join('')}</nav>
+      <a class="cta" href="#/new">${ICON.plus}<span>Подать проблему</span></a>
+      <div class="side-tools"><button class="search-btn" id="palBtn" title="Поиск (Ctrl+K)">${ICON.search}<span>Поиск</span><kbd>Ctrl K</kbd></button></div>
+      <div class="me"><div class="avatar">${h(initials(S.me.full_name || S.me.email))}</div>
+        <div class="who"><b>${h(S.me.full_name || S.me.email)}</b><span>${ROLE_L[S.me.role]}</span></div>
+        <button class="icon-btn collapse-btn" id="miniBtn" title="Свернуть меню">${ICON.side}</button><button class="icon-btn" id="logout" title="Выйти">${ICON.out}</button></div>
+    </aside>
+    <main class="main">${demo}${band}<div class="content" id="content">${body}</div></main></div>`;
+}
+function mount(html) {
+  $('#root').innerHTML = html;
+  $('#logout')?.addEventListener('click', async () => { await api.signOut(); if (!DEMO) location.reload(); });
+  $('#demoUser')?.addEventListener('change', async e => { api.setDemoUser(e.target.value); await loadAll(); route(); });
+  bindGo($('#root'));
+  $('#palBtn')?.addEventListener('click', openPalette);
+  $('#miniBtn')?.addEventListener('click', () => { const m = !ls.get('pgc_mini', false); ls.set('pgc_mini', m); $('.shell').classList.toggle('mini', m); });
+  $$('[data-drill]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); const [k, ...v] = el.dataset.drill.split('='); drill(k, v.join('=')); }));
+  bindGantt($('#root'));
+}
+
+/* =====================================================================
+   Дашборд
+   ===================================================================== */
+let introShown = false;
+function viewDashboard() {
+  const P = S.problems, open = P.filter(isOpen), over = P.filter(p => p.is_overdue);
+  const hi = open.filter(p => ['Критический', 'Высокий'].includes(p.priority));
+  const m = new Date(); const monthKey = `${m.getFullYear()}-${m.getMonth()}`;
+  const closedM = P.filter(p => p.closed_at && (d => `${d.getFullYear()}-${d.getMonth()}` === monthKey)(new Date(p.closed_at)));
+  const closed = P.filter(p => p.closed_at);
+  const avg = closed.length ? Math.round(closed.reduce((s, p) => s + (new Date(p.closed_at) - new Date(p.created_at)) / 864e5, 0) / closed.length) : null;
+  const unassigned = open.filter(p => !p.responsible_id).length;
+  const inWork = P.filter(p => p.status === 'В работе').length;
+  const hr = new Date().getHours(), greet = hr < 5 ? 'Доброй ночи' : hr < 12 ? 'Доброе утро' : hr < 18 ? 'Добрый день' : 'Добрый вечер';
+  const firstName = (S.me.full_name || '').trim().split(/\s+/)[0] || '';
+
+  const st = ENUM.status.map(s => ({ s, n: P.filter(p => p.status === s).length }));
+  const river = `<div class="river"><div class="river-bar">${st.filter(x => x.n).map((x, i) => `<div data-drill="status=${x.s}" title="${x.s}: ${x.n}. Открыть в реестре" style="flex:${x.n};background:${STATUS_C[x.s]};animation-delay:${.15 + i * .09}s"></div>`).join('') || '<div style="flex:1;background:rgba(255,255,255,.12)"></div>'}</div>
+    <div class="river-l">${st.filter(x => x.n).map(x => `<span data-drill="status=${x.s}" style="--c:${STATUS_C[x.s]}"><i></i>${x.s} <b>${x.n}</b></span>`).join('')}</div></div>`;
+  const stat = (v, l, cls = '') => `<div class="stat ${cls}"><div class="v" data-count="${typeof v === 'number' ? v : ''}">${v}</div><div class="l">${l}</div></div>`;
+  const hero = `<div class="hero">
+    <div><div class="hero-hi">${greet}${firstName ? ', ' + h(firstName) : ''}</div>
+      <div class="hero-h">${open.length ? `<span class="n" data-count="${open.length}">${open.length}</span> ${plural(open.length, 'открытая проблема', 'открытые проблемы', 'открытых проблем')}` : 'Открытых проблем нет'}</div>
+      <div class="hero-s">${open.length ? `С высоким приоритетом <b>${hi.length}</b>, просрочено <b>${over.length}</b>, ждут ответственного <b>${unassigned}</b>.` : 'Все поданные проблемы решены и закрыты.'}</div>
+      ${river}</div>
+    <div class="stats">${stat(P.length, 'всего в реестре')}${stat(inWork, 'в работе')}${stat(over.length, 'просрочено', over.length ? 'alert' : '')}${stat(closedM.length, 'закрыто за месяц', 'wide')}${stat(avg === null ? '—' : avg, 'дней в среднем на решение')}</div>
+  </div>`;
+
+  const prio = [...ENUM.priority.map(p => ({ label: p, value: open.filter(x => x.priority === p).length, color: PRIO_C[p], drill: 'priority=' + p })), { label: 'Без оценки', value: open.filter(x => !x.priority).length, color: '#A3AAC2' }];
+  const prioCard = `<div class="card"><div class="card-h"><h3>Приоритет открытых</h3></div><div class="card-b">${bars(prio)}</div></div>`;
+  const catCard = `<div class="card"><div class="card-h"><h3>Категории</h3></div><div class="card-b">${bars(countBy(P, p => p.category || 'Без категории').slice(0, 8).map(i => ({ ...i, drill: i.label === 'Без категории' ? '' : 'category=' + i.label })), '#001966')}</div></div>`;
+  const depCard = `<div class="card"><div class="card-h"><h3>Кто подаёт проблемы</h3></div><div class="card-b">${bars(countBy(P, p => p.applicant_department || '—').slice(0, 8).map(i => ({ ...i, drill: 'dept=' + i.label })), '#C9930F')}</div></div>`;
+
+  const byResp = new Map();
+  open.filter(p => p.responsible_id).forEach(p => { const r = byResp.get(p.responsible_id) || { name: p.responsible_name, n: 0, over: 0 }; r.n++; if (p.is_overdue) r.over++; byResp.set(p.responsible_id, r); });
+  const resp = [...byResp.values()].sort((a, b) => b.n - a.n);
+  const maxR = Math.max(1, ...resp.map(r => r.n));
+  const respCard = `<div class="card"><div class="card-h"><h3>Нагрузка ответственных</h3><span class="muted">открытые</span></div><div class="card-b">
+    ${resp.length ? `<div class="bars">${resp.map(r => `<div class="bar-row"><div class="l">${h(r.name)}</div><div class="bar-track" style="display:flex"><div class="bar-fill" style="width:${(r.n - r.over) / maxR * 100}%;border-radius:99px 0 0 99px"></div><div class="bar-fill" style="width:${r.over / maxR * 100}%;--c:#D23B3B;border-radius:0 99px 99px 0"></div></div><div class="v">${r.n}</div></div>`).join('')}</div>
+    <div class="legend" style="margin-top:14px"><span style="--c:#001966"><i></i>в срок</span><span style="--c:#D23B3B"><i></i>просрочено</span></div>` : '<div class="empty">Назначьте ответственных, и здесь появится их нагрузка</div>'}</div></div>`;
+
+  const weeks = []; const start = new Date(); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() - ((start.getDay() + 6) % 7) - 7 * 7);
+  for (let i = 0; i < 8; i++) { const a = new Date(start); a.setDate(a.getDate() + i * 7); const b = new Date(a); b.setDate(b.getDate() + 7); weeks.push({ a, c: P.filter(p => new Date(p.created_at) >= a && new Date(p.created_at) < b).length, z: P.filter(p => p.closed_at && new Date(p.closed_at) >= a && new Date(p.closed_at) < b).length }); }
+  const wmax = Math.max(1, ...weeks.flatMap(w => [w.c, w.z]));
+  const W = 620, H = 180, pad = 10, bw = (W - pad * 2) / 8;
+  const svg = `<svg viewBox="0 0 ${W} ${H + 28}" width="100%" style="display:block" role="img" aria-label="Поданные и закрытые проблемы по неделям">
+    ${[0, .5, 1].map(f => `<line x1="${pad}" x2="${W - pad}" y1="${H - f * (H - 20)}" y2="${H - f * (H - 20)}" stroke="#ECEFF5"/>`).join('')}
+    ${weeks.map((w, i) => { const x = pad + i * bw + bw * .2, cw = bw * .28, hc = w.c / wmax * (H - 20), hz = w.z / wmax * (H - 20);
+      return `<rect x="${x}" y="${H - hc}" width="${cw}" height="${hc}" rx="4" fill="#001966"><title>Подано: ${w.c}</title></rect>
+              <rect x="${x + cw + 4}" y="${H - hz}" width="${cw}" height="${hz}" rx="4" fill="#C9930F"><title>Закрыто: ${w.z}</title></rect>
+              ${w.c ? `<text x="${x + cw / 2}" y="${H - hc - 6}" text-anchor="middle" font-size="11" font-weight="700" fill="#001966">${w.c}</text>` : ''}
+              <text x="${pad + i * bw + bw / 2}" y="${H + 20}" text-anchor="middle" font-size="11" fill="#5E6785">${w.a.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</text>`; }).join('')}
+  </svg>`;
+  const trendCard = `<div class="card"><div class="card-h"><h3>Поток проблем по неделям</h3><span class="muted"><span class="legend" style="display:inline-flex"><span style="--c:#001966"><i></i>подано</span><span style="--c:#C9930F"><i></i>закрыто</span></span></span></div><div class="card-b">${svg}</div></div>`;
+
+  const hot = open.filter(p => p.priority === 'Критический' || p.is_overdue || (p.days_left !== null && p.days_left <= 7))
+    .sort((a, b) => (b.is_overdue - a.is_overdue) || ((a.days_left ?? 999) - (b.days_left ?? 999)));
+  const hotLi = p => problemLi(p).replace('class="li"', `class="li" style="--c:${p.is_overdue || p.priority === 'Критический' ? '#D23B3B' : '#C9930F'}"`);
+  const hotCard = `<div class="card lift"><div class="card-h"><h3>Горящие</h3><span class="muted">критические, просроченные и с дедлайном в ближайшие 7 дней</span></div><div class="card-b hot">${hot.length ? hot.slice(0, 8).map(hotLi).join('') : '<div class="empty">Горящих проблем нет</div>'}</div></div>`;
+  const rector = open.filter(p => p.rector_decision === 'Да' || p.decision_level === 'Требуется решение ректора');
+  const rectorCard = `<div class="card lift"><div class="card-h"><h3>Нужно решение ректора</h3><span class="muted">${rector.length}</span></div><div class="card-b hot">${rector.length ? rector.map(p => problemLi(p).replace('class="li"', 'class="li" style="--c:#001966"')).join('') : '<div class="empty">Вопросов на уровень ректора нет</div>'}</div></div>`;
+
+  const gList = open.slice().sort((a, b) => (a.agreed_deadline || a.desired_deadline || '9999').localeCompare(b.agreed_deadline || b.desired_deadline || '9999')).slice(0, 8);
+  const ganttCard = `<div class="card" style="margin-top:18px;overflow:hidden"><div class="card-h" style="padding-bottom:14px"><h3>Сроки решений</h3><span class="muted"><a href="#/timeline">Открыть таймлайн</a></span></div>${gantt(gList, { zoom: 'day', compact: true })}</div>`;
+  return shell('dashboard', 'Дашборд', '', '',
+    `<div class="grid g-2">${hotCard}${rectorCard}</div>${ganttCard}
+     <div class="grid g-21" style="margin-top:18px">${trendCard}${prioCard}</div>
+     <div class="grid g-3" style="margin-top:18px">${respCard}${catCard}${depCard}</div>`, { hero, tall: true, glow: true });
+}
+function playIntro() {
+  if (introShown) return; introShown = true;
+  const band = $('.band'); if (!band) return;
+  band.classList.add('intro');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  $$('[data-count]', band).forEach(el => {
+    const to = +el.dataset.count; if (!el.dataset.count || !to) return;
+    const t0 = performance.now(), dur = 900;
+    const tick = t => { const k = Math.min(1, (t - t0) / dur); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(tick); };
+    el.textContent = '0'; requestAnimationFrame(tick);
+  });
+}
+
+/* =====================================================================
+   Диаграмма Ганта
+   ===================================================================== */
+const addDays = (d, n) => { const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+const dDiff = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5);
+const MON = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+function gantt(list, o = {}) {
+  const zoom = o.zoom || 'day';
+  if (!list.length) return '<div class="empty">Нет проблем для графика</div>';
+  const today = todayISO();
+  const rows = list.map(p => {
+    const start = p.submitted_on || String(p.created_at).slice(0, 10);
+    let end = p.agreed_deadline || p.desired_deadline; const tbd = !end;
+    if (!end) end = addDays(start > today ? start : today, 10);
+    if (end < start) end = start;
+    return { p, start, end, tbd };
+  });
+  let min = rows.reduce((m, r) => r.start < m ? r.start : m, today);
+  let max = rows.reduce((m, r) => r.end > m ? r.end : m, today);
+  rows.forEach(r => { if (r.p.control_date && r.p.control_date > max) max = r.p.control_date; if (r.p.control_date && r.p.control_date < min) min = r.p.control_date; });
+  const dw = zoom === 'day' ? 34 : 10;
+  min = addDays(min, zoom === 'day' ? -4 : -10);
+  max = addDays(max, zoom === 'day' ? 12 : 35);
+  const minDays = Math.ceil((o.minWidth || 900) / dw);
+  if (dDiff(min, max) < minDays) max = addDays(min, minDays);
+  const n = dDiff(min, max) + 1, W = n * dw, lw = o.compact ? 300 : 360;
+  const X = d => dDiff(min, d) * dw;
+  // шкала
+  let months = '', ticks = '', wends = '', seps = '';
+  for (let i = 0; i < n; i++) {
+    const d = addDays(min, i), dt = new Date(d + 'T00:00:00'), x = i * dw, wd = dt.getDay();
+    if (i === 0 || dt.getDate() === 1) { months += `<div class="g-month" style="left:${x}px">${MON[dt.getMonth()]}${dt.getMonth() === 0 || i === 0 ? ' ' + dt.getFullYear() : ''}</div>`; if (i) seps += `<div class="g-msep" style="left:${x}px"></div>`; }
+    if (zoom === 'day') {
+      if (Math.abs(dDiff(d, today)) > 1) ticks += `<div class="g-tick ${wd === 0 || wd === 6 ? 'we' : ''}" style="left:${x}px;width:${dw}px">${dt.getDate()}</div>`;
+      if (wd === 0 || wd === 6) wends += `<div class="g-wend" style="left:${x}px;width:${dw}px"></div>`;
+    } else if (wd === 1 && Math.abs(dDiff(d, today)) > 3) ticks += `<div class="g-tick" style="left:${x}px">${String(dt.getDate()).padStart(2, '0')}.${String(dt.getMonth() + 1).padStart(2, '0')}</div>`;
+  }
+  const tx = X(today) + dw / 2;
+  const head = `<div class="g-head"><div class="g-corner">Проблема и ответственный</div><div class="g-scale" style="width:${W}px">${months}${ticks}<div class="g-pill" style="left:${tx}px">Сегодня</div></div></div>`;
+  const rowHtml = r => {
+    const p = r.p, c = STATUS_C[p.status], left = X(r.start), width = Math.max(dw, (dDiff(r.start, r.end) + 1) * dw);
+    const label = `№${p.id}${p.priority ? ' · ' + p.priority : ''}`;
+    const inside = width >= 120;
+    const tip = `<b>№${p.id} ${h(p.title.length > 90 ? p.title.slice(0, 90) + '…' : p.title)}</b>${h(p.status)}${p.priority ? ', ' + h(p.priority.toLowerCase()) + ' приоритет' : ''}\nПодана ${fmtD(r.start)}\n${r.tbd ? 'Срок не назначен' : (p.agreed_deadline ? 'Дедлайн ' : 'Желаемый срок ') + fmtD(r.end)}${p.is_overdue ? `\nПросрочено на ${-p.days_left} ${plural(-p.days_left, 'день', 'дня', 'дней')}` : ''}\nОтветственный: ${h(p.responsible_name || 'не назначен')}`;
+    let bar = `<div class="g-bar ${r.tbd ? 'tbd' : ''} ${isOpen(p) ? '' : 'done'}" data-go="p/${p.id}" data-tip="${h(tip)}" style="--c:${c};left:${left}px;width:${width}px">${!isOpen(p) ? '✓ ' : ''}${inside ? h(label) : ''}</div>`;
+    if (!inside) bar += `<div class="g-out" style="left:${left + width + 8}px">${h(label)}${r.tbd ? ', без срока' : ''}</div>`;
+    if (p.is_overdue) { const ol = X(addDays(r.end, 1)); bar += `<div class="g-over" style="left:${ol - 6}px;width:${dDiff(r.end, today) * dw + 6}px"></div>`; }
+    if (p.control_date) bar += `<div class="g-ms" data-tip="${h('<b>Контрольная проверка</b>' + fmtD(p.control_date))}" style="left:${X(p.control_date) + dw / 2 - 7}px"></div>`;
+    const rn = p.responsible_name;
+    return `<div class="g-row"><div class="g-lab" data-go="p/${p.id}"><div class="av ${rn ? '' : 'none'}" title="${h(rn || 'Ответственный не назначен')}">${rn ? h(initials(rn)) : '?'}</div><div class="tx"><div class="t">${h(p.title)}</div><div class="s">${h(rn || 'Ответственный не назначен')}</div></div></div><div class="g-track" style="width:${W}px">${bar}</div></div>`;
+  };
+  let body = '';
+  if (o.group) {
+    const keyF = { status: p => p.status, resp: p => p.responsible_name || 'Не назначен', dept: p => p.applicant_department || '—', priority: p => p.priority || 'Без приоритета' }[o.group];
+    const order = o.group === 'status' ? ENUM.status : o.group === 'priority' ? [...ENUM.priority, 'Без приоритета'] : null;
+    const groups = new Map(); rows.forEach(r => { const k = keyF(r.p); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r); });
+    const keys = [...groups.keys()].sort((a, b) => order ? order.indexOf(a) - order.indexOf(b) : a.localeCompare(b));
+    keys.forEach(k => { const col = o.group === 'status' ? STATUS_C[k] : o.group === 'priority' ? (PRIO_C[k] || '#A3AAC2') : 'var(--navy)';
+      body += `<div class="g-grp"><div class="g-lab" style="--c:${col}"><i></i>${h(k)} <span>${groups.get(k).length}</span></div><div class="g-track" style="width:${W}px"></div></div>` + groups.get(k).map(rowHtml).join(''); });
+  } else body = rows.map(rowHtml).join('');
+  const firstX = Math.min(...rows.filter(r => isOpen(r.p)).map(r => X(r.start)), X(today));
+  return `<div class="gantt" data-today="${tx}" data-first="${firstX}" data-lw="${lw}" style="--lw:${lw}px"><div class="g-inner" style="width:${lw + W}px">${head}<div style="position:absolute;left:${lw}px;top:56px;bottom:0;width:${W}px;pointer-events:none">${wends}${seps}</div>${body}<div class="g-today" style="left:${lw + tx - 1}px"></div></div></div>`;
+}
+let tipEl;
+const ganttStart = g => Math.max(0, Math.min(+g.dataset.today - (g.clientWidth - +g.dataset.lw) * 0.5, +g.dataset.first - 28));
+function bindGantt(root) {
+  $$('.gantt', root).forEach(g => { g.scrollLeft = ganttStart(g); });
+  $$('[data-tip]', root).forEach(el => {
+    el.addEventListener('mouseenter', () => { tipEl = tipEl || document.body.appendChild(Object.assign(document.createElement('div'), { className: 'g-tip' })); tipEl.innerHTML = el.dataset.tip; tipEl.style.display = 'block'; });
+    el.addEventListener('mousemove', e => { if (!tipEl) return; const w = tipEl.offsetWidth, hh = tipEl.offsetHeight; tipEl.style.left = Math.min(e.clientX + 14, innerWidth - w - 10) + 'px'; tipEl.style.top = (e.clientY + 16 + hh > innerHeight ? e.clientY - hh - 12 : e.clientY + 16) + 'px'; });
+    el.addEventListener('mouseleave', () => { if (tipEl) tipEl.style.display = 'none'; });
+  });
+}
+window.addEventListener('hashchange', () => { if (tipEl) tipEl.style.display = 'none'; });
+
+function viewTimeline() {
+  const T = S.tl = S.tl || ls.get('pgc_tl', { zoom: 'day', group: '', open: true });
+  const list = S.problems.filter(p => !T.open || isOpen(p)).sort((a, b) => (a.submitted_on || '').localeCompare(b.submitted_on || '') || a.id - b.id);
+  const tbd = list.filter(p => !p.agreed_deadline).length, over = list.filter(p => p.is_overdue).length;
+  const soon = list.filter(p => isOpen(p) && p.days_left !== null && p.days_left >= 0 && p.days_left <= 7).length;
+  const hero = `<div class="band-row"><div><h1>Таймлайн</h1><div class="sub">Сроки всех проблем на одной шкале: от подачи до дедлайна</div><div class="rule"></div>
+    <div class="band-chips"><span class="band-chip"><b>${list.length}</b>в графике</span><span class="band-chip ${over ? 'alert' : ''}"><b>${over}</b>просрочено</span><span class="band-chip"><b>${soon}</b>дедлайн в ближайшие 7 дней</span><span class="band-chip"><b>${tbd}</b>без согласованного срока</span></div></div>
+    <div class="actions"><a class="btn gold" href="#/new">${ICON.plus} Подать проблему</a></div></div>`;
+  const body = `<div class="card lift" style="overflow:hidden">
+    <div class="tl-bar"><div class="seg" role="group" aria-label="Масштаб"><button data-zoom="day" class="${T.zoom === 'day' ? 'on' : ''}">Дни</button><button data-zoom="week" class="${T.zoom === 'week' ? 'on' : ''}">Недели</button></div>
+      <select class="select" id="tlGroup" style="width:auto;min-width:200px;padding-top:8px;padding-bottom:8px">${[['', 'Без группировки'], ['status', 'По статусу'], ['resp', 'По ответственному'], ['priority', 'По приоритету'], ['dept', 'По подразделению']].map(([v, t]) => `<option value="${v}" ${T.group === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
+      <span class="chip-t ${T.open ? 'on' : ''}" id="tlOpen">Только открытые</span>
+      <button class="btn sm" id="tlToday" style="margin-left:auto">К сегодняшнему дню</button></div>
+    ${gantt(list, { zoom: T.zoom, group: T.group, minWidth: 1100 })}
+    <div class="tl-legend">${ENUM.status.filter(s => list.some(p => p.status === s)).map(s => `<span><i class="lg-bar" style="--c:${STATUS_C[s]}"></i>${s}</span>`).join('')}<span><i class="lg-tbd"></i>Срок не назначен</span><span><i class="lg-over"></i>Просрочка</span><span><i class="lg-ms"></i>Контрольная проверка</span><span><i class="lg-today"></i>Сегодня</span></div>
+  </div>`;
+  mount(shell('timeline', 'Таймлайн', '', '', body, { hero, tall: true }));
+  const save = () => { ls.set('pgc_tl', T); viewTimeline(); };
+  $$('[data-zoom]').forEach(b => b.addEventListener('click', () => { T.zoom = b.dataset.zoom; save(); }));
+  $('#tlGroup').addEventListener('change', e => { T.group = e.target.value; save(); });
+  $('#tlOpen').addEventListener('click', () => { T.open = !T.open; save(); });
+  $('#tlToday').addEventListener('click', () => { const g = $('.gantt'); g.scrollTo({ left: Math.max(0, +g.dataset.today - (g.clientWidth - +g.dataset.lw) * 0.5), behavior: 'smooth' }); });
+}
+
+/* =====================================================================
+   Быстрый поиск (Ctrl/⌘ + K)
+   ===================================================================== */
+function openPalette() {
+  if ($('.pal-bg') || !S.me) return;
+  const cmds = [['＋', 'Подать проблему', '#/new'], ['▦', 'Дашборд', '#/dashboard'], ['≡', 'Реестр проблем', '#/registry'], ['▤', 'Таймлайн', '#/timeline'], ['✓', 'Мои задачи', '#/my'], ...(isAdmin() ? [['⛨', 'Админ PGC: ждут оценки', '#/admin/queue']] : [])];
+  const bg = document.createElement('div'); bg.className = 'pal-bg';
+  bg.innerHTML = `<div class="pal" role="dialog" aria-label="Поиск"><input placeholder="Найти проблему по названию, номеру или подразделению" aria-label="Поиск"><div class="pal-list"></div><div class="pal-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> выбрать</span><span><kbd>Enter</kbd> открыть</span><span><kbd>Esc</kbd> закрыть</span></div></div>`;
+  document.body.appendChild(bg);
+  const inp = $('input', bg), listEl = $('.pal-list', bg); let items = [], sel = 0;
+  const close = () => bg.remove();
+  const render = () => {
+    const q = inp.value.trim().toLowerCase();
+    const probs = S.problems.filter(p => !q || [p.id, p.title, p.applicant_department, p.responsible_name, p.status].join(' ').toLowerCase().includes(q.replace(/^№/, ''))).slice(0, 8);
+    const cm = cmds.filter(c => !q || c[1].toLowerCase().includes(q));
+    items = [...probs.map(p => ({ href: '#/p/' + p.id, html: `<div class="ic" style="background:color-mix(in srgb,${STATUS_C[p.status]} 14%,#fff);color:${STATUS_C[p.status]};font-weight:700;font-size:11px">${p.id}</div><div style="min-width:0"><div class="t">${h(p.title)}</div><div class="s">${h(p.status)}${p.responsible_name ? ', ' + h(p.responsible_name) : ''}</div></div>` })),
+             ...cm.map(c => ({ href: c[2], html: `<div class="ic">${c[0]}</div><div class="t">${c[1]}</div>` }))];
+    sel = Math.min(sel, Math.max(0, items.length - 1));
+    listEl.innerHTML = (probs.length ? '<div class="pal-sec">Проблемы</div>' : '') + items.slice(0, probs.length).map((it, i) => `<div class="pal-it ${i === sel ? 'on' : ''}" data-i="${i}">${it.html}</div>`).join('') +
+      (cm.length ? '<div class="pal-sec">Перейти</div>' : '') + items.slice(probs.length).map((it, i) => `<div class="pal-it ${i + probs.length === sel ? 'on' : ''}" data-i="${i + probs.length}">${it.html}</div>`).join('') +
+      (!items.length ? '<div class="empty">Ничего не найдено</div>' : '');
+    $$('.pal-it', listEl).forEach(el => { el.addEventListener('click', () => { location.hash = items[+el.dataset.i].href; close(); }); el.addEventListener('mousemove', () => { if (sel !== +el.dataset.i) { sel = +el.dataset.i; render(); } }); });
+  };
+  inp.addEventListener('input', () => { sel = 0; render(); });
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); sel = (sel + 1) % Math.max(1, items.length); render(); $('.pal-it.on', listEl)?.scrollIntoView({ block: 'nearest' }); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); sel = (sel - 1 + items.length) % Math.max(1, items.length); render(); $('.pal-it.on', listEl)?.scrollIntoView({ block: 'nearest' }); }
+    if (e.key === 'Enter' && items[sel]) { location.hash = items[sel].href; close(); }
+    if (e.key === 'Escape') close();
+  });
+  bg.addEventListener('click', e => { if (e.target === bg) close(); });
+  render(); inp.focus();
+}
+document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); } if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); openPalette(); } });
+
+/* =====================================================================
+   Реестр
+   ===================================================================== */
+function filtered() {
+  const f = S.filters, q = f.q.trim().toLowerCase();
+  let r = S.problems.filter(p =>
+    (!q || [p.title, p.description, p.applicant_name, p.applicant_department, String(p.id)].join(' ').toLowerCase().includes(q)) &&
+    (!f.status || (f.status === '__open' ? isOpen(p) : p.status === f.status)) && (!f.priority || p.priority === f.priority) &&
+    (!f.category || p.category === f.category) && (!f.dept || p.applicant_department === f.dept) &&
+    (!f.resp || (f.resp === '__none' ? !p.responsible_id : p.responsible_id === f.resp)) &&
+    (!f.overdue || p.is_overdue) && (!f.mine || p.submitted_by === S.me.id) && (!f.assigned || p.responsible_id === S.me.id));
+  const pr = { 'Критический': 0, 'Высокий': 1, 'Средний': 2, 'Низкий': 3 };
+  const key = { id: p => p.id, status: p => ENUM.status.indexOf(p.status), priority: p => pr[p.priority] ?? 9, deadline: p => p.agreed_deadline || '9999', resp: p => p.responsible_name || 'яяя', title: p => p.title.toLowerCase() }[f.sort] || (p => p.id);
+  return r.sort((a, b) => (key(a) > key(b) ? 1 : key(a) < key(b) ? -1 : 0) * f.dir);
+}
+function viewRegistry() {
+  const f = S.filters;
+  const depts = [...new Set(S.problems.map(p => p.applicant_department).filter(Boolean))].sort();
+  const resps = S.profiles.filter(p => S.problems.some(x => x.responsible_id === p.id));
+  const rows = filtered();
+  const th = (k, t) => `<th data-sort="${k}">${t}${f.sort === k ? (f.dir > 0 ? ' ↑' : ' ↓') : ''}</th>`;
+  const body = `<div class="card lift">
+    <div class="filters">
+      <input class="input" id="fq" placeholder="Поиск по названию, описанию, заявителю…" value="${h(f.q)}">
+      <select class="select" data-f="status"><option value="">Все статусы</option><option value="__open" ${f.status === '__open' ? 'selected' : ''}>Только открытые</option>${ENUM.status.map(s => `<option ${f.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
+      <select class="select" data-f="priority">${opts(ENUM.priority, f.priority, 'Любой приоритет')}</select>
+      <select class="select" data-f="category">${opts(ENUM.category, f.category, 'Все категории')}</select>
+      <select class="select" data-f="dept">${opts(depts, f.dept, 'Все подразделения')}</select>
+      <select class="select" data-f="resp"><option value="">Все ответственные</option><option value="__none" ${f.resp === '__none' ? 'selected' : ''}>Не назначен</option>${resps.map(p => `<option value="${p.id}" ${f.resp === p.id ? 'selected' : ''}>${h(p.full_name)}</option>`).join('')}</select>
+      <span class="chip-t ${f.overdue ? 'on' : ''}" data-t="overdue">Просрочено</span>
+      <span class="chip-t ${f.mine ? 'on' : ''}" data-t="mine">Мои заявки</span>
+      <span class="chip-t ${f.assigned ? 'on' : ''}" data-t="assigned">Я ответственный</span>
+      <button class="btn ghost sm" id="freset">Сбросить</button>
+    </div>
+    <div class="table-wrap">
+      <table class="t"><thead><tr>${th('id', '№')}${th('title', 'Проблема')}${th('status', 'Статус')}${th('priority', 'Приоритет')}${th('resp', 'Ответственный')}${th('deadline', 'Дедлайн')}<th>Подана</th></tr></thead>
+      <tbody>${rows.map(p => `<tr data-go="p/${p.id}" class="${p.is_overdue ? 'over' : ''}">
+        <td class="pill-id">${p.id}</td>
+        <td><div class="ttl">${h(p.title)}</div><div class="sub">${h(p.applicant_department)}, ${h(p.applicant_name)}${p.category ? ` <span class="badge" style="--c:#5E6785;padding:0 8px;margin-left:4px">${h(p.category)}</span>` : ''}</div></td>
+        <td>${statusB(p.status)}</td><td>${p.priority ? prioB(p.priority) : '<span class="muted small">—</span>'}</td>
+        <td>${p.responsible_name ? h(p.responsible_name) : '<span class="muted small">не назначен</span>'}</td>
+        <td>${dlChip(p)}</td><td class="nowrap muted small">${fmtD(p.submitted_on)}</td></tr>`).join('')}</tbody></table>
+      ${rows.length ? '' : '<div class="empty">Ничего не найдено. Сбросьте фильтры или измените запрос.</div>'}
+    </div></div>`;
+  mount(shell('registry', 'Реестр проблем', `Показано ${rows.length} из ${S.problems.length}`, `<button class="btn on-navy" id="exp">${ICON.dl} Выгрузить в Excel</button><a class="btn gold" href="#/new">${ICON.plus} Подать проблему</a>`, body, { tall: true }));
+  const save = () => { ls.set('pgc_filters', S.filters); viewRegistry(); };
+  const fq = $('#fq'); fq.addEventListener('input', () => { S.filters.q = fq.value; clearTimeout(fq._t); fq._t = setTimeout(() => { save(); const n = $('#fq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
+  $$('[data-f]').forEach(s => s.addEventListener('change', () => { S.filters[s.dataset.f] = s.value; save(); }));
+  $$('[data-t]').forEach(c => c.addEventListener('click', () => { S.filters[c.dataset.t] = !S.filters[c.dataset.t]; save(); }));
+  $$('[data-sort]').forEach(t => t.addEventListener('click', () => { const k = t.dataset.sort; if (S.filters.sort === k) S.filters.dir *= -1; else { S.filters.sort = k; S.filters.dir = k === 'id' ? -1 : 1; } save(); }));
+  $('#freset').addEventListener('click', () => { S.filters = { ...FDEF }; save(); });
+  $('#exp').addEventListener('click', () => exportXlsx(rows));
+}
+function exportXlsx(rows) {
+  if (!window.XLSX) return toast('Библиотека Excel не загрузилась', true);
+  const r1 = [['№', 'Дата подачи', 'ФИО заявителя', 'Должность', 'Подразделение-заявитель', 'Краткое название проблемы', 'Описание проблемы / факты', 'На что влияет проблема', 'Последствия, если не решить', 'Желаемый срок решения', 'Предлагаемое решение', 'Какие подразделения вовлечены', 'Контактные лица / участники', 'Материалы / ссылка'],
+    ...rows.map(p => [p.id, fmtD(p.submitted_on), p.applicant_name, p.applicant_position, p.applicant_department, p.title, p.description, p.impact, p.consequences, [p.desired_deadline ? fmtD(p.desired_deadline) : '', p.desired_deadline_note].filter(Boolean).join(' — '), p.proposed_solution, (p.involved_departments || []).join(', '), p.contacts, p.materials])];
+  const r2 = [['№ проблемы', 'Категория проблемы', 'Приоритет', 'Срочность', 'Масштаб влияния', 'Уровень решения', 'Ведущее подразделение', 'Связанные подразделения', 'Ответственный за решение', 'Согласованный срок', 'Требуется решение ректора?', 'Решение / следующий шаг', 'Статус', 'Дата контрольной проверки', 'Комментарий координатора'],
+    ...rows.map(p => [p.id, p.category, p.priority, p.urgency, p.scale, p.decision_level, p.lead_department, (p.related_departments || []).join(', '), p.responsible_name, p.agreed_deadline ? fmtD(p.agreed_deadline) : '', p.rector_decision, p.next_step, p.status, p.control_date ? fmtD(p.control_date) : '', p.coordinator_comment])];
+  const wb = XLSX.utils.book_new();
+  const s1 = XLSX.utils.aoa_to_sheet(r1); s1['!cols'] = [7, 14, 22, 20, 25, 30, 48, 30, 36, 20, 38, 35, 28, 32].map(wch => ({ wch }));
+  const s2 = XLSX.utils.aoa_to_sheet(r2); s2['!cols'] = [16, 25, 16, 16, 22, 25, 26, 32, 26, 18, 22, 38, 18, 20, 38].map(wch => ({ wch }));
+  XLSX.utils.book_append_sheet(wb, s1, 'Реестр проблем'); XLSX.utils.book_append_sheet(wb, s2, 'Оценка PGC');
+  XLSX.writeFile(wb, `PGC_Reestr_${todayISO()}.xlsx`);
+}
+
+/* =====================================================================
+   Карточка проблемы
+   ===================================================================== */
+async function viewProblem(id) {
+  mount(shell('registry', 'Проблема №' + h(id), '', '', '<div class="spinner">Загрузка…</div>'));
+  let p;
+  try { p = await api.problem(id); } catch (e) { $('#content').innerHTML = `<div class="empty">Проблема не найдена</div>`; return; }
+  if (isAdmin() && p.status === 'Новая') { try { await api.update(p.id, { status: 'На оценке' }); p = await api.problem(id); reloadProblems(); } catch {} }
+  const [act, atts] = await Promise.all([api.activity(id), api.attachments(id)]);
+  const admin = isAdmin(), mine = p.submitted_by === S.me.id, resp = p.responsible_id === S.me.id;
+  const canEdit = admin || (mine && p.status === 'Новая');
+  const canUpload = admin || mine || resp;
+
+  const field = (t, v) => `<div class="sec"><h4>${t}</h4><div class="v">${v ? linkify(v) : '<span class="muted">—</span>'}</div></div>`;
+  const tags = arr => arr?.length ? `<div class="tags">${arr.map(t => `<span class="tag">${h(t)}</span>`).join('')}</div>` : '<span class="muted">—</span>';
+  const appCard = `<div class="card lift"><div class="card-h"><h3>Заявка</h3>${canEdit ? `<a class="btn sm" style="margin-left:auto" href="#/edit/${p.id}">Редактировать</a>` : ''}</div><div class="card-b">
+    <div class="kv" style="padding-bottom:12px;border-bottom:1px solid var(--line-2)"><dt>Заявитель</dt><dd>${h(p.applicant_name)}${p.applicant_position ? ' · ' + h(p.applicant_position) : ''}</dd><dt>Подразделение</dt><dd>${h(p.applicant_department)}</dd><dt>Дата подачи</dt><dd>${fmtD(p.submitted_on)}</dd></div>
+    ${field('Описание проблемы / факты', p.description)}${field('На что влияет проблема', p.impact)}${field('Последствия, если не решить', p.consequences)}
+    ${field('Желаемый срок решения', [p.desired_deadline ? fmtD(p.desired_deadline) : '', p.desired_deadline_note].filter(Boolean).join(' — '))}
+    ${field('Предлагаемое решение', p.proposed_solution)}
+    <div class="sec"><h4>Какие подразделения вовлечены</h4>${tags(p.involved_departments)}</div>
+    ${field('Контактные лица / участники', p.contacts)}</div></div>`;
+
+  const matCard = `<div class="card" style="margin-top:16px"><div class="card-h"><h3>Материалы</h3><span class="muted">${atts.length} ${plural(atts.length, 'файл', 'файла', 'файлов')}</span></div><div class="card-b">
+    ${p.materials ? `<div class="v pre" style="margin-bottom:12px;color:var(--ink-2)">${linkify(p.materials)}</div>` : ''}
+    ${atts.map(a => `<div class="att">📎 <span class="n">${h(a.name)}</span><span class="muted small">${(a.size / 1024).toFixed(0)} КБ</span><button class="btn sm" data-file="${h(a.path)}">Открыть</button></div>`).join('')}
+    ${!p.materials && !atts.length ? '<div class="muted">Материалов пока нет</div>' : ''}
+    ${canUpload ? `<label class="btn sm" style="margin-top:8px">＋ Прикрепить файл<input type="file" id="upl" multiple hidden></label>` : ''}</div></div>`;
+
+  const AIC = { created: ['🆕', '#E0E7FF'], comment: ['💬', '#F1F5F9'], status: ['🔄', '#E0F2FE'], assign: ['👤', '#EDE9FE'], deadline: ['⏰', '#FEF3C7'], assessment: ['📋', '#ECFDF5'], done_request: ['✅', '#D1FAE5'], edit: ['✏️', '#F1F5F9'] };
+  const actText = a => {
+    const who = `<b>${h(a.author?.full_name || a.author?.email || 'Система')}</b>`;
+    switch (a.kind) {
+      case 'created': return `${who} подал(а) проблему`;
+      case 'comment': return `${who} оставил(а) комментарий`;
+      case 'status': return `${who} изменил(а) статус: ${statusB(a.old_value)} → ${statusB(a.new_value)}`;
+      case 'assign': return a.new_value ? `${who} назначил(а) ответственного: <b>${h(a.new_value)}</b>` : `${who} снял(а) ответственного`;
+      case 'deadline': return `${who} ${a.new_value ? `установил(а) дедлайн: <b>${h(a.new_value)}</b>` : 'снял(а) дедлайн'}${a.old_value ? ` <span class="muted">(было ${h(a.old_value)})</span>` : ''}`;
+      case 'assessment': return `${who} обновил(а) оценку PGC`;
+      case 'done_request': return `${who} сообщил(а) о выполнении`;
+      case 'edit': return `${who} отредактировал(а) заявку`;
+    } return who;
+  };
+  const tlCard = `<div class="card" style="margin-top:16px"><div class="card-h"><h3>Ход работы</h3><span class="muted">${act.length} ${plural(act.length, 'событие', 'события', 'событий')}</span></div><div class="card-b">
+    <ul class="timeline">${act.map(a => `<li><div class="tl-ic" style="background:${AIC[a.kind]?.[1]}">${AIC[a.kind]?.[0] || '•'}</div><div class="tl-h">${actText(a)}</div><div class="tl-t">${fmtDT(a.created_at)}</div>${a.body && ['comment', 'done_request'].includes(a.kind) ? `<div class="tl-body">${linkify(a.body)}</div>` : ''}</li>`).join('')}</ul>
+    <div style="border-top:1px solid var(--line-2);padding-top:14px;margin-top:4px">
+      <textarea class="textarea" id="cmt" placeholder="Комментарий: что сделано, что мешает, вопрос…" style="min-height:80px"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn primary" id="cmtSend">Отправить комментарий</button>
+      ${resp && isOpen(p) && !admin ? `<button class="btn ok" id="doneReq">✅ Сообщить о выполнении</button>` : ''}</div>
+      ${resp && !admin ? '<div class="muted small" style="margin-top:6px">Статус и дедлайн меняют администраторы PGC — они получат уведомление.</div>' : ''}
+    </div></div></div>`;
+
+  const dl = p.agreed_deadline ? (isOpen(p) ? (p.days_left < 0 ? ['Просрочено', `${-p.days_left} ${plural(-p.days_left, 'день', 'дня', 'дней')}`, 'var(--danger)'] : p.days_left === 0 ? ['Дедлайн', 'Сегодня', 'var(--danger)'] : ['До дедлайна', `${p.days_left} ${plural(p.days_left, 'день', 'дня', 'дней')}`, p.days_left <= 3 ? 'var(--warn)' : 'var(--ink)']) : ['Дедлайн', fmtD(p.agreed_deadline), 'var(--ok)']) : null;
+  const dlCard = `<div class="card deadline-card">${dl ? `<div><div class="muted small">${dl[0]}</div><div class="big" style="color:${dl[2]}">${dl[1]}</div><div class="muted small" style="margin-top:4px">${fmtD(p.agreed_deadline)}</div></div>` : `<div><div class="muted small">Дедлайн</div><div class="big muted" style="font-size:20px">не назначен</div></div>`}
+    <div style="margin-left:auto;text-align:right"><div class="muted small">Ответственный</div><div style="font-weight:600">${p.responsible_name ? h(p.responsible_name) : '<span class="muted">не назначен</span>'}</div></div></div>`;
+
+  let assessCard;
+  if (admin) {
+    assessCard = `<div class="card lift"><div class="assess-h"><h3>Оценка PGC</h3><div>Видят все, меняют только администраторы</div></div><div class="card-b" id="assess" style="padding-top:18px">
+      <div class="field"><label>Статус</label><select class="select" name="status">${opts(ENUM.status, p.status, null)}</select></div>
+      <div class="field"><label>Ответственный за решение</label><select class="select" name="responsible_id">${peopleOpts(p.responsible_id)}</select></div>
+      <div class="field"><label>Согласованный срок</label><input class="input" type="date" name="agreed_deadline" value="${p.agreed_deadline || ''}"></div>
+      <div class="grid2"><div class="field"><label>Приоритет</label><select class="select" name="priority">${opts(ENUM.priority, p.priority)}</select></div>
+      <div class="field"><label>Срочность</label><select class="select" name="urgency">${opts(ENUM.urgency, p.urgency)}</select></div></div>
+      <div class="field"><label>Категория</label><select class="select" name="category">${opts(ENUM.category, p.category)}</select></div>
+      <div class="field"><label>Масштаб влияния</label><select class="select" name="scale">${opts(ENUM.scale, p.scale)}</select></div>
+      <div class="field"><label>Уровень решения</label><select class="select" name="decision_level">${opts(ENUM.decision_level, p.decision_level)}</select></div>
+      <div class="field"><label>Требуется решение ректора?</label><select class="select" name="rector_decision">${opts(ENUM.rector_decision, p.rector_decision)}</select></div>
+      <div class="field"><label>Ведущее подразделение</label><input class="input" name="lead_department" list="deptList" value="${h(p.lead_department)}"></div>
+      <div class="field"><label>Связанные подразделения</label><input class="input" name="related_departments" value="${h((p.related_departments || []).join(', '))}" placeholder="через запятую"></div>
+      <div class="field"><label>Решение / следующий шаг</label><textarea class="textarea" name="next_step" style="min-height:70px">${h(p.next_step)}</textarea></div>
+      <div class="field"><label>Дата контрольной проверки</label><input class="input" type="date" name="control_date" value="${p.control_date || ''}"></div>
+      <div class="field"><label>Комментарий координатора</label><textarea class="textarea" name="coordinator_comment" style="min-height:70px">${h(p.coordinator_comment)}</textarea></div>
+      <datalist id="deptList">${S.departments.map(d => `<option value="${h(d.name)}">`).join('')}</datalist>
+      <button class="btn gold" id="saveAssess" style="width:100%;justify-content:center;padding:12px">Сохранить оценку</button>
+      <div class="muted small" style="margin-top:8px">При назначении ответственного и срока статус сам станет «В работе», ответственный получит уведомление в Telegram.</div>
+    </div></div>`;
+  } else {
+    const kv = [['Категория', p.category], ['Приоритет', p.priority ? prioB(p.priority) : null, 1], ['Срочность', p.urgency], ['Масштаб влияния', p.scale], ['Уровень решения', p.decision_level], ['Решение ректора', p.rector_decision], ['Ведущее подразделение', p.lead_department], ['Связанные подразделения', (p.related_departments || []).join(', ')], ['Следующий шаг', p.next_step], ['Контрольная проверка', p.control_date ? fmtD(p.control_date) : ''], ['Комментарий координатора', p.coordinator_comment]];
+    assessCard = `<div class="card lift"><div class="assess-h"><h3>Оценка PGC</h3><div>Заполняют администраторы PGC</div></div><div class="card-b" style="padding-top:18px">
+      ${p.category || p.priority ? `<dl class="kv">${kv.map(([k, v, raw]) => `<dt>${k}</dt><dd class="pre">${v ? (raw ? v : h(v)) : '<span class="muted">—</span>'}</dd>`).join('')}</dl>` : '<div class="muted">Проблема ещё не оценена координатором PGC.</div>'}</div></div>`;
+  }
+
+  const dlBig = !p.agreed_deadline ? `<div class="big" style="font-size:24px;color:rgba(255,255,255,.55)">без срока</div><div class="cap">дедлайн не назначен</div>`
+    : !isOpen(p) ? `<div class="big" style="font-size:30px">${fmtD(p.agreed_deadline)}</div><div class="cap">согласованный срок</div>`
+    : p.days_left < 0 ? `<div class="big over">${-p.days_left}</div><div class="cap">${plural(-p.days_left, 'день', 'дня', 'дней')} просрочки, срок был ${fmtD(p.agreed_deadline)}</div>`
+    : p.days_left === 0 ? `<div class="big over">сегодня</div><div class="cap">дедлайн ${fmtD(p.agreed_deadline)}</div>`
+    : `<div class="big">${p.days_left}</div><div class="cap">${plural(p.days_left, 'день', 'дня', 'дней')} до дедлайна, ${fmtD(p.agreed_deadline)}</div>`;
+  const dHero = `<a class="back" href="#/registry">${ICON.back} Реестр проблем</a>
+    <div class="d-hero"><div><div class="d-badges"><span class="pill-id" style="color:var(--gold-hi)">№${p.id}</span>${statusB(p.status)}${p.priority ? `<span class="badge" style="--c:${PRIO_C[p.priority]}">${h(p.priority)}</span>` : ''}${p.category ? `<span class="badge">${h(p.category)}</span>` : ''}</div>
+      <h1 class="d-title">${h(p.title)}</h1>
+      <div class="d-meta">Подал(а) ${h(p.applicant_name)}, ${h(p.applicant_department)}, ${fmtD(p.submitted_on)}${p.closed_at ? `. Закрыта ${fmtD(p.closed_at)}` : ''}</div></div>
+      <div class="d-dl">${dlBig}<div class="resp">Ответственный: <b>${p.responsible_name ? h(p.responsible_name) : 'не назначен'}</b></div></div></div>`;
+  const body = `<div class="d-grid"><div>${appCard}${matCard}${tlCard}</div><div>${assessCard}</div></div>`;
+  mount(shell('registry', 'Карточка проблемы', '', '', body, { hero: dHero, tall: true }));
+
+  $$('[data-file]').forEach(b => b.addEventListener('click', async () => { try { window.open(await api.fileUrl(b.dataset.file), '_blank'); } catch (e) { toast(errMsg(e), true); } }));
+  $('#upl')?.addEventListener('change', async e => { try { for (const f of e.target.files) await api.upload(p.id, f); toast('Файл прикреплён'); viewProblem(id); } catch (er) { toast(errMsg(er), true); } });
+  $('#cmtSend').addEventListener('click', async () => { const v = $('#cmt').value.trim(); if (!v) return; try { await api.addActivity(p.id, 'comment', v); toast('Комментарий отправлен'); viewProblem(id); } catch (e) { toast(errMsg(e), true); } });
+  $('#doneReq')?.addEventListener('click', async () => { try { await api.addActivity(p.id, 'done_request', $('#cmt').value.trim()); toast('Администраторы уведомлены о выполнении'); viewProblem(id); } catch (e) { toast(errMsg(e), true); } });
+  $('#saveAssess')?.addEventListener('click', async () => {
+    const box = $('#assess'), g = n => box.querySelector(`[name="${n}"]`).value;
+    const patch = { status: g('status'), responsible_id: g('responsible_id') || null, agreed_deadline: g('agreed_deadline') || null, priority: g('priority') || null, urgency: g('urgency') || null,
+      category: g('category') || null, scale: g('scale') || null, decision_level: g('decision_level') || null, rector_decision: g('rector_decision') || null, lead_department: g('lead_department').trim(),
+      related_departments: g('related_departments').split(',').map(s => s.trim()).filter(Boolean), next_step: g('next_step').trim(), control_date: g('control_date') || null, coordinator_comment: g('coordinator_comment').trim() };
+    try { await api.update(p.id, patch); await reloadProblems(); toast('Оценка сохранена'); viewProblem(id); } catch (e) { toast(errMsg(e), true); }
+  });
+}
+
+/* =====================================================================
+   Мастер подачи (вопрос на каждое поле)
+   ===================================================================== */
+async function viewWizard(editId) {
+  let editing = null;
+  if (editId) { editing = await api.problem(editId); if (!(isAdmin() || (editing.submitted_by === S.me.id && editing.status === 'Новая'))) { toast('Заявку можно редактировать только в статусе «Новая»', true); location.hash = '#/p/' + editId; return; } }
+  const empty = { applicant_name: S.me.full_name, applicant_position: S.me.position, applicant_department: S.me.department, title: '', description: '', impact: '', consequences: '', desired_deadline: '', desired_deadline_note: '', proposed_solution: '', involved_departments: [], contacts: '', materials: '' };
+  const W = { step: 0, files: [], data: editing ? Object.fromEntries(Object.keys(empty).map(k => [k, editing[k] ?? empty[k]])) : { ...empty, ...ls.get('pgc_draft', {}) } };
+  if (!editing) { W.data.applicant_name ||= S.me.full_name; W.data.applicant_position ||= S.me.position; W.data.applicant_department ||= S.me.department; }
+  const Q = S.questions;
+  const steps = [{ key: '_who', label: 'Заявитель' }, ...Q.map(q => ({ key: q.field_key, label: q.label, q })), { key: '_review', label: 'Проверка и отправка' }];
+  const saveDraft = () => { if (!editing) ls.set('pgc_draft', W.data); };
+  const isFilled = k => { const v = W.data[k]; if (k === 'desired_deadline') return !!(W.data.desired_deadline || W.data.desired_deadline_note.trim()); return Array.isArray(v) ? v.length > 0 : !!String(v || '').trim(); };
+  const valid = i => { const s = steps[i]; if (s.key === '_who') return W.data.applicant_name.trim() && W.data.applicant_department.trim(); if (s.q?.required) return isFilled(s.key); return true; };
+  const maxReached = () => { let i = 0; while (i < steps.length - 1 && valid(i)) i++; return i; };
+
+  function input(s) {
+    const d = W.data;
+    if (s.key === '_who') return `<div class="field"><label>ФИО <span class="req">*</span></label><input class="input" data-k="applicant_name" value="${h(d.applicant_name)}"></div>
+      <div class="field"><label>Должность</label><input class="input" data-k="applicant_position" value="${h(d.applicant_position)}"></div>
+      <div class="field"><label>Подразделение-заявитель <span class="req">*</span></label><input class="input" data-k="applicant_department" list="dl1" value="${h(d.applicant_department)}"><datalist id="dl1">${S.departments.map(x => `<option value="${h(x.name)}">`).join('')}</datalist></div>`;
+    const q = s.q;
+    switch (q.kind) {
+      case 'text': return `<input class="input" data-k="${q.field_key}" value="${h(d[q.field_key])}" maxlength="200" autofocus>`;
+      case 'date': return `<div class="grid2"><div class="field"><label>Дата</label><input class="input" type="date" data-k="desired_deadline" value="${h(d.desired_deadline || '')}" min="${todayISO()}"></div></div>
+        <div class="field"><label>Почему к этой дате / к чему привязано</label><textarea class="textarea" data-k="desired_deadline_note" style="min-height:100px">${h(d.desired_deadline_note)}</textarea></div>`;
+      case 'tags': { const sug = S.departments.map(x => x.name).filter(n => !d.involved_departments.includes(n));
+        return `<div class="tagbox" id="tagbox">${d.involved_departments.map((t, i) => `<span class="tag">${h(t)}<button data-rm="${i}" title="Убрать">×</button></span>`).join('')}<input id="taginp" placeholder="${d.involved_departments.length ? 'Ещё подразделение…' : 'Начните вводить и нажмите Enter'}" autofocus></div>
+          ${sug.length ? `<div class="muted small" style="margin-top:12px">Подсказки:</div><div class="sugg">${sug.map(n => `<button data-add="${h(n)}">＋ ${h(n)}</button>`).join('')}</div>` : ''}`; }
+      case 'files': return `<textarea class="textarea" data-k="materials" placeholder="Ссылки и названия документов" style="min-height:110px">${h(d.materials)}</textarea>
+        <label class="btn" style="margin-top:12px">📎 Прикрепить файлы<input type="file" id="wzfiles" multiple hidden></label>
+        <div id="flist" style="margin-top:10px">${W.files.map((f, i) => `<div class="att">📎 <span class="n">${h(f.name)}</span><span class="muted small">${(f.size / 1024).toFixed(0)} КБ</span><button class="btn sm ghost" data-frm="${i}">Убрать</button></div>`).join('')}</div>
+        ${editing ? '<div class="muted small">Новые файлы можно добавить и в карточке проблемы.</div>' : ''}`;
+      default: return `<textarea class="textarea" data-k="${q.field_key}" autofocus>${h(d[q.field_key])}</textarea>`;
+    }
+  }
+  function review() {
+    const d = W.data;
+    const row = (i, t, v) => `<div class="sec"><h4>${t} <a href="javascript:void 0" data-jump="${i}">Изменить</a></h4><div class="v">${v || '<span class="muted">—</span>'}</div></div>`;
+    return `<div class="review">${row(0, 'Заявитель', h([d.applicant_name, d.applicant_position, d.applicant_department].filter(Boolean).join(' · ')))}
+      ${Q.map((q, i) => { let v;
+        if (q.kind === 'tags') v = d.involved_departments.length ? `<div class="tags">${d.involved_departments.map(t => `<span class="tag">${h(t)}</span>`).join('')}</div>` : '';
+        else if (q.kind === 'date') v = h([d.desired_deadline ? fmtD(d.desired_deadline) : '', d.desired_deadline_note].filter(Boolean).join(' — '));
+        else if (q.kind === 'files') v = linkify(d.materials) + (W.files.length ? `<div class="muted small" style="margin-top:4px">Файлов к загрузке: ${W.files.length}</div>` : '');
+        else v = linkify(d[q.field_key]);
+        return row(i + 1, q.label + (q.required ? ' <span class="req">*</span>' : ''), v); }).join('')}</div>`;
+  }
+  function render() {
+    const s = steps[W.step], last = W.step === steps.length - 1, reach = maxReached();
+    const pct = Math.round(W.step / (steps.length - 1) * 100);
+    const head = s.key === '_who' ? `<div class="wz-k">Шаг 1 из ${steps.length}</div><div class="wz-q">Кто подаёт проблему?</div><div class="wz-hint">Данные взяты из вашего профиля — проверьте их.</div>`
+      : last ? `<div class="wz-k">Последний шаг</div><div class="wz-q">Проверьте заявку</div><div class="wz-hint">После отправки администраторы PGC получат уведомление и оценят проблему.</div>`
+      : `<div class="wz-k">Шаг ${W.step + 1} из ${steps.length}. ${h(s.q.label)}${s.q.required ? ' <span class="req">*</span>' : ''}</div><div class="wz-q">${h(s.q.question)}</div><div class="wz-hint">${h(s.q.hint)}</div>${s.q.example ? `<div class="wz-ex"><b>Пример:</b> ${h(s.q.example)}</div>` : '<div style="height:12px"></div>'}`;
+    const body = `<div class="wz">
+      <div class="card wz-steps lift">${steps.map((x, i) => `<div class="wz-step ${i === W.step ? 'cur' : isFilledStep(x) ? 'done' : ''}" data-jump="${i <= reach ? i : ''}"><span class="n">${i !== W.step && isFilledStep(x) ? '✓' : i + 1}</span>${h(x.label)}</div>`).join('')}</div>
+      <div class="card wz-main lift"><div class="wz-bar"><div style="width:${Math.max(pct, 3)}%"></div></div>${head}
+        <div id="wzin">${last ? review() : input(s)}</div>
+        <div class="wz-nav">${W.step > 0 ? '<button class="btn" id="wzback">Назад</button>' : ''}<span class="sp"></span>
+          ${!editing && !last ? '<span class="muted small">Черновик сохраняется автоматически</span>' : ''}
+          ${last ? `<button class="btn gold" id="wzsend">${editing ? 'Сохранить изменения' : 'Отправить в PGC'}</button>` : `<button class="btn primary" id="wznext">Далее</button>`}</div>
+      </div></div>`;
+    mount(shell('new', editing ? `Редактирование заявки №${editing.id}` : 'Новая проблема', editing ? 'Изменения увидят администраторы PGC' : 'Ответьте на вопросы по очереди. Обязательные отмечены звёздочкой', editing ? `<a class="btn on-navy" href="#/p/${editing.id}">Отмена</a>` : (Object.values(ls.get('pgc_draft', {})).some(v => Array.isArray(v) ? v.length : v) ? '<button class="btn on-navy" id="wzclear">Очистить черновик</button>' : ''), body, { tall: true }));
+    bind();
+  }
+  function isFilledStep(x) { if (x.key === '_who') return valid(0); if (x.key === '_review') return false; return isFilled(x.key); }
+  function bind() {
+    $$('[data-k]').forEach(el => el.addEventListener('input', () => { W.data[el.dataset.k] = el.value; saveDraft(); }));
+    const fi = $('#wzin [autofocus]'); if (fi) { fi.focus(); if (fi.setSelectionRange && fi.type !== 'date') fi.setSelectionRange(fi.value.length, fi.value.length); }
+    const ti = $('#taginp');
+    if (ti) {
+      const add = v => { v = v.trim().replace(/,$/, ''); if (v && !W.data.involved_departments.includes(v)) { W.data.involved_departments.push(v); saveDraft(); render(); } };
+      ti.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); if (ti.value.trim()) add(ti.value); else if (e.key === 'Enter') next(); } if (e.key === 'Backspace' && !ti.value && W.data.involved_departments.length) { W.data.involved_departments.pop(); saveDraft(); render(); } });
+      ti.addEventListener('blur', () => { if (ti.value.trim()) add(ti.value); });
+      $$('[data-add]').forEach(b => b.addEventListener('click', () => add(b.dataset.add)));
+      $$('[data-rm]').forEach(b => b.addEventListener('click', () => { W.data.involved_departments.splice(+b.dataset.rm, 1); saveDraft(); render(); }));
+    }
+    $('#wzfiles')?.addEventListener('change', e => { W.files.push(...e.target.files); render(); });
+    $$('[data-frm]').forEach(b => b.addEventListener('click', () => { W.files.splice(+b.dataset.frm, 1); render(); }));
+    $$('[data-jump]').forEach(b => b.addEventListener('click', () => { if (b.dataset.jump === '') return; W.step = +b.dataset.jump; render(); }));
+    $('#wzback')?.addEventListener('click', () => { W.step--; render(); });
+    $('#wznext')?.addEventListener('click', next);
+    $('#wzclear')?.addEventListener('click', () => { ls.del('pgc_draft'); viewWizard(); });
+    $$('#wzin .input').forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); next(); } }));
+    $$('#wzin .textarea').forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) next(); }));
+    $('#wzsend')?.addEventListener('click', send);
+  }
+  function next() {
+    if (!valid(W.step)) { toast('Заполните обязательное поле', true); return; }
+    W.step = Math.min(W.step + 1, steps.length - 1); render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  async function send() {
+    const bad = steps.findIndex((_, i) => !valid(i));
+    if (bad >= 0 && bad < steps.length - 1) { toast('Не заполнено: ' + steps[bad].label, true); W.step = bad; render(); return; }
+    const btn = $('#wzsend'); btn.disabled = true; btn.textContent = 'Отправка…';
+    const row = { ...W.data, desired_deadline: W.data.desired_deadline || null };
+    Object.keys(row).forEach(k => { if (typeof row[k] === 'string') row[k] = row[k].trim(); });
+    try {
+      const p = editing ? await api.update(editing.id, row) : await api.create(row);
+      for (const f of W.files) { try { await api.upload(p.id, f); } catch (e) { toast('Файл не загрузился: ' + f.name, true); } }
+      if (!editing) ls.del('pgc_draft');
+      if (!S.me.full_name && row.applicant_name) { await api.updateProfile(S.me.id, { full_name: row.applicant_name, position: row.applicant_position, department: row.applicant_department }); S.me = await api.me(); }
+      await reloadProblems();
+      toast(editing ? 'Изменения сохранены' : `Проблема №${p.id} отправлена в PGC`);
+      location.hash = '#/p/' + p.id;
+    } catch (e) { toast(errMsg(e), true); btn.disabled = false; btn.textContent = editing ? 'Сохранить изменения' : 'Отправить в PGC'; }
+  }
+  render();
+}
+
+/* =====================================================================
+   Мои задачи
+   ===================================================================== */
+function viewMy() {
+  const mine = S.problems.filter(p => p.responsible_id === S.me.id);
+  const open = mine.filter(isOpen).sort((a, b) => (a.agreed_deadline || '9999').localeCompare(b.agreed_deadline || '9999'));
+  const over = open.filter(p => p.is_overdue), soon = open.filter(p => !p.is_overdue && p.days_left !== null && p.days_left <= 7), rest = open.filter(p => !over.includes(p) && !soon.includes(p));
+  const done = mine.filter(p => !isOpen(p));
+  const subm = S.problems.filter(p => p.submitted_by === S.me.id);
+  const group = (t, arr, c) => arr.length ? `<div class="card" style="margin-bottom:16px"><div class="card-h"><h3 style="color:${c || 'inherit'}">${t}</h3><span class="muted">${arr.length}</span></div><div class="card-b">${arr.map(problemLi).join('')}</div></div>` : '';
+  const body = `<div class="grid g-2"><div>
+      <h3 style="font-size:15px;margin:0 0 12px">Я ответственный</h3>
+      ${open.length || done.length ? group('🔴 Просрочено', over, 'var(--danger)') + group('⏳ Дедлайн в ближайшие 7 дней', soon, 'var(--warn)') + group('В работе', rest) + group('Выполненные и закрытые', done) : '<div class="card"><div class="empty">Вам пока не назначено ни одной проблемы</div></div>'}
+    </div><div>
+      <h3 style="font-size:15px;margin:0 0 12px">Мои заявки</h3>
+      ${subm.length ? group('Поданные мной', subm) : `<div class="card"><div class="empty">Вы ещё не подавали проблем<br><br><a class="btn gold" href="#/new">${ICON.plus} Подать проблему</a></div></div>`}
+    </div></div>`;
+  mount(shell('my', 'Мои задачи', `В работе ${open.length}, просрочено ${over.length}`, '', body));
+}
+
+/* =====================================================================
+   Админ PGC
+   ===================================================================== */
+function viewAdmin(tab = 'queue') {
+  if (!isAdmin()) { location.hash = '#/dashboard'; return; }
+  const tabs = [['queue', 'Ждут оценки'], ['users', 'Пользователи'], ['questions', 'Вопросы мастера'], ['departments', 'Подразделения']];
+  const tabsHtml = `<div class="tabs">${tabs.map(([k, t]) => `<a href="#/admin/${k}" class="${tab === k ? 'on' : ''}">${t}</a>`).join('')}</div>`;
+  let body = '';
+  if (tab === 'queue') {
+    const q = S.problems.filter(p => isOpen(p) && (['Новая', 'На оценке'].includes(p.status) || !p.responsible_id || !p.agreed_deadline));
+    body += `<div class="callout">Быстрое назначение: выберите приоритет, ответственного и срок — статус станет «В работе», ответственный получит уведомление в Telegram. Полная оценка — в карточке.</div>
+      <div class="card table-wrap"><table class="t"><thead><tr><th>№</th><th>Проблема</th><th>Статус</th><th style="min-width:150px">Приоритет</th><th style="min-width:220px">Ответственный</th><th style="min-width:150px">Срок</th><th></th></tr></thead><tbody>
+      ${q.map(p => `<tr data-row="${p.id}" style="cursor:default"><td class="pill-id">${p.id}</td><td><div class="ttl"><a href="#/p/${p.id}">${h(p.title)}</a></div><div class="sub">${h(p.applicant_department)} · ${fmtD(p.submitted_on)}</div></td><td>${statusB(p.status)}</td>
+        <td><select class="select" name="priority">${opts(ENUM.priority, p.priority)}</select></td><td><select class="select" name="responsible_id">${peopleOpts(p.responsible_id)}</select></td>
+        <td><input class="input" type="date" name="agreed_deadline" value="${p.agreed_deadline || ''}"></td><td><button class="btn primary sm" data-save="${p.id}">Назначить</button></td></tr>`).join('')}
+      </tbody></table>${q.length ? '' : '<div class="empty">Очередь пуста — все проблемы оценены и назначены 🎉</div>'}</div>`;
+  } else if (tab === 'users') {
+    body += `<div class="card table-wrap"><table class="t"><thead><tr><th>Пользователь</th><th>Должность</th><th>Подразделение</th><th>Telegram</th><th style="min-width:170px">Роль</th></tr></thead><tbody>
+      ${S.profiles.map(u => `<tr style="cursor:default"><td><div class="ttl">${h(u.full_name || '—')}</div><div class="sub">${h(u.email)}</div></td><td>${h(u.position)}</td><td>${h(u.department)}</td><td>${u.tg_connected ? '<span class="badge" style="--c:#059669">подключён</span>' : '<span class="muted small">нет</span>'}</td>
+        <td><select class="select" data-role="${u.id}" ${u.id === S.me.id ? 'disabled' : ''}>${Object.entries(ROLE_L).map(([k, v]) => `<option value="${k}" ${u.role === k ? 'selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('')}
+      </tbody></table></div><div class="muted small" style="margin-top:10px">Новые сотрудники появляются здесь после первого входа. Администраторы назначают ответственных и меняют статусы и дедлайны; «Руководство» — просмотр всего.</div>`;
+  } else if (tab === 'questions') {
+    body += `<div class="callout">Тексты вопросов, подсказок и примеров, которые видит сотрудник в мастере подачи. Поля реестра не меняются — только формулировки.</div>
+      ${S.questions.map(q => `<div class="card" style="margin-bottom:12px" data-q="${q.field_key}"><div class="card-h"><h3>${q.sort}. ${h(q.label)}</h3><span class="muted">${q.kind}</span></div><div class="card-b">
+        <div class="field"><label>Вопрос</label><input class="input" name="question" value="${h(q.question)}"></div>
+        <div class="grid2"><div class="field"><label>Подсказка</label><textarea class="textarea" name="hint" style="min-height:60px">${h(q.hint)}</textarea></div><div class="field"><label>Пример</label><textarea class="textarea" name="example" style="min-height:60px">${h(q.example)}</textarea></div></div>
+        <div style="display:flex;align-items:center;gap:14px"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" name="required" ${q.required ? 'checked' : ''}> Обязательное поле</label><span style="flex:1"></span><button class="btn primary sm" data-qsave="${q.field_key}">Сохранить</button></div>
+      </div></div>`).join('')}`;
+  } else {
+    body += `<div class="card" style="max-width:640px"><div class="card-b"><div style="display:flex;gap:8px;margin-bottom:12px"><input class="input" id="newDept" placeholder="Новое подразделение"><button class="btn primary" id="addDept">Добавить</button></div>
+      ${S.departments.map(d => `<div class="att"><span class="n">${h(d.name)}</span><button class="btn sm ghost" data-ddel="${d.id}">Удалить</button></div>`).join('')}
+      <div class="muted small" style="margin-top:8px">Список используется как подсказки в мастере — сотрудники могут вписать и своё подразделение.</div></div></div>`;
+  }
+  mount(shell('admin', 'Админ PGC', 'Администраторы: Бобур Гафуров и Амаль Баширов', '', body, { extra: tabsHtml }));
+  $$('[data-save]').forEach(b => b.addEventListener('click', async () => {
+    const tr = b.closest('tr'), g = n => tr.querySelector(`[name="${n}"]`).value;
+    try { await api.update(+b.dataset.save, { priority: g('priority') || null, responsible_id: g('responsible_id') || null, agreed_deadline: g('agreed_deadline') || null }); await reloadProblems(); toast('Сохранено'); viewAdmin('queue'); } catch (e) { toast(errMsg(e), true); }
+  }));
+  $$('[data-role]').forEach(s => s.addEventListener('change', async () => { try { await api.updateProfile(s.dataset.role, { role: s.value }); S.profiles = await api.profiles(); toast('Роль обновлена'); } catch (e) { toast(errMsg(e), true); } }));
+  $$('[data-qsave]').forEach(b => b.addEventListener('click', async () => {
+    const c = b.closest('[data-q]'), g = n => c.querySelector(`[name="${n}"]`);
+    try { await api.saveQuestion({ field_key: b.dataset.qsave, question: g('question').value.trim(), hint: g('hint').value.trim(), example: g('example').value.trim(), required: g('required').checked }); S.questions = await api.questions(); toast('Вопрос сохранён'); } catch (e) { toast(errMsg(e), true); }
+  }));
+  $('#addDept')?.addEventListener('click', async () => { const v = $('#newDept').value.trim(); if (!v) return; try { await api.addDepartment(v); S.departments = await api.departments(); viewAdmin('departments'); } catch (e) { toast(errMsg(e), true); } });
+  $$('[data-ddel]').forEach(b => b.addEventListener('click', async () => { try { await api.delDepartment(+b.dataset.ddel); S.departments = await api.departments(); viewAdmin('departments'); } catch (e) { toast(errMsg(e), true); } }));
+}
+
+/* =====================================================================
+   Профиль + Telegram
+   ===================================================================== */
+async function viewProfile() {
+  const m = S.me, first = !m.full_name;
+  const tgLink = CONFIG.TG_BOT_USERNAME ? `https://t.me/${CONFIG.TG_BOT_USERNAME}?start=${await api.tgToken().catch(() => '')}` : '';
+  const body = `${first ? '<div class="callout">Добро пожаловать! Заполните профиль — эти данные подставятся в ваши заявки.</div>' : ''}
+    <div class="grid g-2" style="max-width:1000px"><div class="card"><div class="card-h"><h3>Мои данные</h3></div><div class="card-b">
+      <div class="field"><label>Email</label><input class="input" value="${h(m.email)}" disabled></div>
+      <div class="field"><label>ФИО</label><input class="input" id="pfn" value="${h(m.full_name)}" placeholder="Фамилия Имя"></div>
+      <div class="field"><label>Должность</label><input class="input" id="ppos" value="${h(m.position)}"></div>
+      <div class="field"><label>Подразделение</label><input class="input" id="pdep" list="pdl" value="${h(m.department)}"><datalist id="pdl">${S.departments.map(d => `<option value="${h(d.name)}">`).join('')}</datalist></div>
+      <div class="field"><label>Роль</label><input class="input" value="${ROLE_L[m.role]}" disabled></div>
+      <button class="btn primary" id="psave">Сохранить</button></div></div>
+    <div class="card"><div class="card-h"><h3>Уведомления в Telegram</h3></div><div class="card-b">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:28px">✈️</span><div>${m.tg_connected ? '<span class="badge" style="--c:#059669">Подключено</span>' : '<span class="badge" style="--c:#94A3B8">Не подключено</span>'}</div></div>
+      <div class="muted" style="margin-bottom:14px">Бот пришлёт: назначение вас ответственным, смену статуса и дедлайна, комментарии, напоминание за 3 дня до дедлайна и о просрочке.${m.role === 'admin' ? ' Администраторам — новые заявки, отметки о выполнении и ежедневная сводка просрочек.' : ''}</div>
+      ${tgLink ? `<a class="btn primary" href="${tgLink}" target="_blank" rel="noopener">${m.tg_connected ? 'Переподключить Telegram' : 'Подключить Telegram'}</a><div class="muted small" style="margin-top:8px">Откроется бот — нажмите «Start». Затем обновите эту страницу.</div>` : `<div class="muted small">Бот ещё не настроен (CONFIG.TG_BOT_USERNAME).</div>`}
+    </div></div></div>`;
+  mount(shell('profile', 'Профиль', '', '', body));
+  $('#psave').addEventListener('click', async () => {
+    const patch = { full_name: $('#pfn').value.trim(), position: $('#ppos').value.trim(), department: $('#pdep').value.trim() };
+    if (!patch.full_name) return toast('Укажите ФИО', true);
+    try { await api.updateProfile(m.id, patch); S.me = await api.me(); S.profiles = await api.profiles(); toast('Профиль сохранён'); if (first) location.hash = '#/dashboard'; else viewProfile(); } catch (e) { toast(errMsg(e), true); }
+  });
+}
+
+/* =====================================================================
+   Вход
+   ===================================================================== */
+function viewAuth(mode = 'in') {
+  $('#root').innerHTML = `<div class="auth">
+    <div class="auth-l band glow"><div class="ring"></div><div class="ring r2"></div>
+      <img src="${LOGO}" alt="Central Asian University">
+      <h1>Реестр проблем PGC</h1>
+      <div class="rule"></div>
+      <p>Подайте проблему, и у неё появятся ответственный, срок и прозрачный ход решения.</p>
+      <div class="foot">Central Asian University, Ташкент</div></div>
+    <div class="auth-r"><div class="auth-f">
+      <h2>${mode === 'in' ? 'Вход' : 'Регистрация'}</h2><div class="muted" style="margin:6px 0 24px">${mode === 'in' ? 'Войдите корпоративной почтой' : 'Для сотрудников с почтой @centralasian.uz'}</div>
+      ${mode === 'up' ? '<div class="field"><label>ФИО</label><input class="input" id="aname" placeholder="Фамилия Имя"></div>' : ''}
+      <div class="field"><label>Email</label><input class="input" id="aemail" type="email" placeholder="name@centralasian.uz" autocomplete="email"></div>
+      <div class="field"><label>Пароль</label><input class="input" id="apass" type="password" autocomplete="${mode === 'in' ? 'current-password' : 'new-password'}"></div>
+      <button class="btn primary" id="ago" style="width:100%;justify-content:center;padding:13px;margin-top:4px">${mode === 'in' ? 'Войти' : 'Зарегистрироваться'}</button>
+      ${mode === 'in' ? '<button class="btn" id="amagic" style="width:100%;justify-content:center;margin-top:10px;padding:12px">Получить ссылку для входа на почту</button>' : ''}
+      <div style="text-align:center;margin-top:22px" class="muted">${mode === 'in' ? 'Нет аккаунта? <a href="javascript:void 0" id="asw">Зарегистрироваться</a>' : 'Уже есть аккаунт? <a href="javascript:void 0" id="asw">Войти</a>'}</div>
+    </div></div></div>`;
+  $('#asw').addEventListener('click', () => viewAuth(mode === 'in' ? 'up' : 'in'));
+  const go = async () => {
+    const email = $('#aemail').value.trim().toLowerCase(), pass = $('#apass').value;
+    if (!email || !pass) return toast('Введите email и пароль', true);
+    try {
+      if (mode === 'in') { await api.signIn(email, pass); boot(); }
+      else { const name = $('#aname').value.trim(); if (!name) return toast('Укажите ФИО', true); const r = await api.signUp(email, pass, name); if (r.session) boot(); else { toast('Письмо для подтверждения отправлено на ' + email); viewAuth('in'); } }
+    } catch (e) { toast(errMsg(e), true); }
+  };
+  $('#ago').addEventListener('click', go);
+  $$('.auth .input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
+  $('#amagic')?.addEventListener('click', async () => { const email = $('#aemail').value.trim().toLowerCase(); if (!email) return toast('Введите email', true); try { await api.magic(email); toast('Ссылка для входа отправлена на ' + email); } catch (e) { toast(errMsg(e), true); } });
+}
+
+/* =====================================================================
+   Роутер и запуск
+   ===================================================================== */
+async function route() {
+  if (!S.me) return;
+  const [, name = 'dashboard', arg] = (location.hash || '#/dashboard').split('/');
+  if (!S.me.full_name && name !== 'profile' && name !== 'new') { location.hash = '#/profile'; return; }
+  window.scrollTo(0, 0);
+  try {
+    if (['dashboard', 'registry', 'timeline', 'my', 'admin'].includes(name)) await reloadProblems();
+    switch (name) {
+      case 'registry': return viewRegistry();
+      case 'timeline': return viewTimeline();
+      case 'p': return viewProblem(arg);
+      case 'new': return viewWizard();
+      case 'edit': return viewWizard(arg);
+      case 'my': return viewMy();
+      case 'admin': return viewAdmin(arg);
+      case 'profile': return viewProfile();
+      default: mount(viewDashboard()); return playIntro();
+    }
+  } catch (e) { console.error(e); toast(errMsg(e), true); }
+}
+let booting = false;
+async function boot() {
+  if (booting) return; booting = true;
+  $('#root').innerHTML = '<div class="spinner">Загрузка…</div>';
+  try {
+    const session = await api.session();
+    if (!session) return viewAuth('in');
+    await loadAll();
+    route();
+  } catch (e) { console.error(e); toast(errMsg(e), true); viewAuth('in'); }
+  finally { booting = false; }
+}
+window.addEventListener('hashchange', route);
+api.onAuth(ev => { if (ev === 'SIGNED_OUT') { S.me = null; viewAuth('in'); } if (ev === 'SIGNED_IN' && !S.me) boot(); });
+boot();
+</script>
+</body>
+</html>
