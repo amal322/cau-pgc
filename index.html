@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OEC · Реестр проблем</title>
+<title>OEC · Перечень зон развития</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
@@ -137,7 +137,7 @@ h1,h2,h3{margin:0}
 .dl{font-size:12.5px;font-weight:600;white-space:nowrap}
 .dl.over{color:var(--danger)} .dl.soon{color:var(--warn)} .dl.ok{color:var(--muted)}
 
-/* реестр */
+/* перечень */
 .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px;border-bottom:1px solid var(--line)}
 .filters .input{max-width:300px}
 .filters .select{width:auto;min-width:150px;padding-top:8px;padding-bottom:8px}
@@ -164,7 +164,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13.5px}
 .hot .li{padding-left:14px;position:relative}
 .hot .li::before{content:"";position:absolute;left:0;top:15px;bottom:15px;width:3px;border-radius:3px;background:var(--c,var(--danger))}
 
-/* карточка проблемы */
+/* карточка задачи */
 .d-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .d-title{font-family:Onest,system-ui,sans-serif!important;font-size:30px;font-weight:700;line-height:1.25;letter-spacing:-.01em;max-width:52ch}
 .d-meta{color:rgba(255,255,255,.62);font-size:13.5px;margin-top:10px}
@@ -576,18 +576,18 @@ function DemoAPI() {
   ];
   const act = [];
   const log = (problem_id, author_id, kind, body = '', old_value = null, new_value = null) => act.push({ id: ++aseq, problem_id, author_id, kind, body, old_value, new_value, created_at: new Date().toISOString() });
-  probs.forEach(p => log(p.id, 'u-amal', 'created', 'Проблема подана'));
+  probs.forEach(p => log(p.id, 'u-amal', 'created', 'Задача озвучена'));
   log(1, 'u-bobur', 'assign', '', null, 'Мохчехра'); log(1, 'u-bobur', 'status', '', 'На оценке', 'В работе');
   log(1, 'u-moh', 'comment', 'Начала сводить шкалу по всем школам, к четвергу будет черновик.');
   const atts = [];
   const qs = [
-    ['title', 1, 'Краткое название проблемы', 'Как назвать проблему одной строкой?', 'Коротко и по сути — так, чтобы было понятно из списка.', 'Mapping студентов 2-го курса: enrollment и сумма контракта', 'text', true],
-    ['description', 2, 'Описание проблемы / факты', 'Что именно происходит?', 'С какого времени, кого затрагивает, какие факты и цифры. Факты вместо общих формулировок.', 'С начала семестра у 2-го курса не завершён mapping учебных планов — 340 студентов не могут быть зачислены на курсы.', 'textarea', true],
-    ['impact', 3, 'На что влияет проблема', 'На какие процессы, показатели или людей влияет проблема?', 'Перечислите процессы, системы, группы людей.', 'Enrollment, суммы контрактов, расписание', 'textarea', true],
-    ['consequences', 4, 'Последствия, если не решить', 'Что произойдёт, если проблему не решить?', 'Когда это станет критичным и к чему приведёт.', 'Неверные суммы контрактов, жалобы родителей, задержка старта семестра', 'textarea', true],
+    ['title', 1, 'Краткое название задачи', 'Как назвать задачу одной строкой?', 'Коротко и по сути — так, чтобы было понятно из списка.', 'Mapping студентов 2-го курса: enrollment и сумма контракта', 'text', true],
+    ['description', 2, 'Описание задачи / факты', 'Что именно происходит?', 'С какого времени, кого затрагивает, какие факты и цифры. Факты вместо общих формулировок.', 'С начала семестра у 2-го курса не завершён mapping учебных планов — 340 студентов не могут быть зачислены на курсы.', 'textarea', true],
+    ['impact', 3, 'На что влияет задача', 'На какие процессы, показатели или людей влияет задача?', 'Перечислите процессы, системы, группы людей.', 'Enrollment, суммы контрактов, расписание', 'textarea', true],
+    ['consequences', 4, 'Последствия, если не решить', 'Что произойдёт, если задачу не решить?', 'Когда это станет критичным и к чему приведёт.', 'Неверные суммы контрактов, жалобы родителей, задержка старта семестра', 'textarea', true],
     ['desired_deadline', 5, 'Желаемый срок решения', 'К какой дате нужно решение и почему?', 'Укажите дату, если она известна, и что к ней привязано. Финальный срок согласует координатор OEC.', 'До открытия enrollment', 'date', false],
-    ['proposed_solution', 6, 'Предлагаемое решение', 'Как вы видите решение? Какие шаги предлагаете?', 'Можно пошагово. Подача не означает утверждения решения или бюджета.', '1. Свести mapping-таблицу 2. Сверить с регистратором 3. Загрузить', 'textarea', false],
-    ['involved_departments', 7, 'Какие подразделения вовлечены', 'Какие подразделения должны участвовать или зависят от проблемы?', 'Введите название и нажмите Enter. Можно выбрать из подсказок или вписать своё.', 'Офис регистратора, Финансовый отдел', 'tags', true],
+    ['proposed_solution', 6, 'Предлагаемое решение', 'Как вы видите решение? Какие шаги предлагаете?', 'Можно пошагово. Озвучивание задачи не означает утверждения решения или бюджета.', '1. Свести mapping-таблицу 2. Сверить с регистратором 3. Загрузить', 'textarea', false],
+    ['involved_departments', 7, 'Какие подразделения вовлечены', 'Какие подразделения должны участвовать или зависят от задачи?', 'Введите название и нажмите Enter. Можно выбрать из подсказок или вписать своё.', 'Офис регистратора, Финансовый отдел', 'tags', true],
     ['contacts', 8, 'Контактные лица / участники', 'Кого нужно привлечь и в какой роли?', 'ФИО и роль каждого участника.', 'Регистратор — данные студентов; финансовый отдел — расчёт контрактов', 'textarea', false],
     ['materials', 9, 'Материалы / ссылка', 'Есть ли документы, таблицы или скриншоты?', 'Вставьте ссылки и/или прикрепите файлы.', 'https://docs.google.com/...', 'files', false],
   ].map(([field_key, sort, label, question, hint, example, kind, required]) => ({ field_key, sort, label, question, hint, example, kind, required }));
@@ -612,7 +612,7 @@ function DemoAPI() {
       const admin = meP().role === 'admin';
       const p = { ...base, ...row, id: ++seq, created_at: new Date().toISOString(), submitted_by: me, status: 'Новая' };
       if (!admin) ASSESS.forEach(k => { if (k !== 'status') p[k] = base[k]; });
-      probs.push(p); log(p.id, me, 'created', 'Проблема подана'); return clone(p);
+      probs.push(p); log(p.id, me, 'created', 'Задача озвучена'); return clone(p);
     },
     async update(id, patch) {
       const p = probs.find(x => x.id == id); const admin = meP().role === 'admin';
@@ -659,7 +659,7 @@ function __track(p) {
   return Promise.resolve(p).finally(() => { __pending = Math.max(0, __pending - 1); if (b) b.classList.remove('is-busy'); if (!__pending) { clearTimeout(__tbTimer); $('#topbar')?.classList.remove('on'); } });
 }
 Object.keys(api).forEach(k => { const f = api[k]; if (typeof f === 'function' && !['onAuth', 'setDemoUser'].includes(k)) api[k] = (...a) => __track(f.apply(api, a)); });
-const BOOT_HTML = () => `<div class="boot"><div class="boot-in"><img src="${LOGO}" alt="Central Asian University"><div class="boot-bar"></div><div class="boot-t">Загружаем реестр OEC…</div></div></div>`;
+const BOOT_HTML = () => `<div class="boot"><div class="boot-in"><img src="${LOGO}" alt="Central Asian University"><div class="boot-bar"></div><div class="boot-t">Загружаем перечень OEC…</div></div></div>`;
 const SKELETON = `<div class="grid g-2"><div class="sk-card"><div class="sk" style="height:18px;width:40%"></div><div class="sk" style="height:14px;margin-top:18px"></div><div class="sk" style="height:14px;margin-top:10px;width:85%"></div><div class="sk" style="height:14px;margin-top:10px;width:70%"></div></div><div class="sk-card"><div class="sk" style="height:18px;width:50%"></div><div class="sk" style="height:42px;margin-top:18px"></div><div class="sk" style="height:42px;margin-top:10px"></div></div></div><div class="sk-card" style="margin-top:18px"><div class="sk" style="height:220px"></div></div>`;
 
 
@@ -712,7 +712,7 @@ function shell(active, title, sub, actions, body, o = {}) {
   const myOpen = S.problems.filter(p => p.responsible_id === S.me.id && isOpen(p)).length;
   const queue = S.problems.filter(p => ['Новая', 'На оценке'].includes(p.status)).length + S.profiles.filter(p => p.role === 'pending').length;
   const nav = [
-    ['dashboard', 'Дашборд', ICON.dash], ['registry', 'Реестр проблем', ICON.list], ['timeline', 'Таймлайн', ICON.gantt],
+    ['dashboard', 'Дашборд', ICON.dash], ['registry', 'Перечень зон развития', ICON.list], ['timeline', 'Таймлайн', ICON.gantt],
     ['my', 'Мои задачи', ICON.me, myOpen], ...(isAdmin() ? [['admin', 'Админ OEC', ICON.admin, queue]] : []), ['profile', 'Профиль', ICON.user],
   ];
   const demo = DEMO ? `<div class="demo-bar"><b>Демо-режим.</b> Данные живут только в этой вкладке. Смотреть как
@@ -721,9 +721,9 @@ function shell(active, title, sub, actions, body, o = {}) {
   return `<div class="shell ${ls.get('pgc_mini', false) ? 'mini' : ''}">
     <aside class="side">
       <a class="brand" href="#/dashboard"><img src="${LOGO}" alt="Central Asian University"></a>
-      <div class="brand-sub"><b>Реестр проблем OEC</b>Operational Excellence Committee</div>
+      <div class="brand-sub"><b>Перечень зон развития OEC</b>Operational Excellence Committee</div>
       <nav class="nav">${nav.map(([k, t, ic, c]) => `<a href="#/${k}" class="${active === k ? 'on' : ''}">${ic}<span class="t">${t}</span>${c ? `<span class="count">${c}</span>` : ''}</a>`).join('')}</nav>
-      <a class="cta" href="#/new">${ICON.plus}<span>Подать проблему</span></a>
+      <a class="cta" href="#/new">${ICON.plus}<span>Озвучить задачу</span></a>
       <div class="side-tools"><a class="search-btn" href="guide.html" target="_blank" title="Инструкция" style="text-decoration:none"><span style="display:inline-block;width:16px;text-align:center">▶</span><span>Инструкция</span></a><button class="search-btn" id="palBtn" title="Поиск (Ctrl+K)">${ICON.search}<span>Поиск</span><kbd>Ctrl K</kbd></button></div>
       <div class="me"><div class="avatar">${h(initials(S.me.full_name || S.me.email))}</div>
         <div class="who"><b>${h(S.me.full_name || S.me.email)}</b><span>${ROLE_L[S.me.role]}</span></div>
@@ -759,21 +759,21 @@ function viewDashboard() {
   const firstName = (S.me.full_name || '').trim().split(/\s+/)[0] || '';
 
   const st = ENUM.status.map(s => ({ s, n: P.filter(p => p.status === s).length }));
-  const river = `<div class="river"><div class="river-bar">${st.filter(x => x.n).map((x, i) => `<div data-drill="status=${x.s}" title="${x.s}: ${x.n}. Открыть в реестре" style="flex:${x.n};background:${STATUS_C[x.s]};animation-delay:${.15 + i * .09}s"></div>`).join('') || '<div style="flex:1;background:rgba(255,255,255,.12)"></div>'}</div>
+  const river = `<div class="river"><div class="river-bar">${st.filter(x => x.n).map((x, i) => `<div data-drill="status=${x.s}" title="${x.s}: ${x.n}. Открыть в перечне" style="flex:${x.n};background:${STATUS_C[x.s]};animation-delay:${.15 + i * .09}s"></div>`).join('') || '<div style="flex:1;background:rgba(255,255,255,.12)"></div>'}</div>
     <div class="river-l">${st.filter(x => x.n).map(x => `<span data-drill="status=${x.s}" style="--c:${STATUS_C[x.s]}"><i></i>${x.s} <b>${x.n}</b></span>`).join('')}</div></div>`;
   const stat = (v, l, cls = '') => `<div class="stat ${cls}"><div class="v" data-count="${typeof v === 'number' ? v : ''}">${v}</div><div class="l">${l}</div></div>`;
   const hero = `<div class="hero">
     <div><div class="hero-hi">${greet}${firstName ? ', ' + h(firstName) : ''}</div>
-      <div class="hero-h">${open.length ? `<span class="n" data-count="${open.length}">${open.length}</span> ${plural(open.length, 'открытая проблема', 'открытые проблемы', 'открытых проблем')}` : 'Открытых проблем нет'}</div>
-      <div class="hero-s">${open.length ? `С высоким приоритетом <b>${hi.length}</b>, просрочено <b>${over.length}</b>, ждут ответственного <b>${unassigned}</b>.` : 'Все поданные проблемы решены и закрыты.'}</div>
+      <div class="hero-h">${open.length ? `<span class="n" data-count="${open.length}">${open.length}</span> ${plural(open.length, 'открытая задача', 'открытые задачи', 'открытых задач')}` : 'Открытых задач нет'}</div>
+      <div class="hero-s">${open.length ? `С высоким приоритетом <b>${hi.length}</b>, просрочено <b>${over.length}</b>, ждут ответственного <b>${unassigned}</b>.` : 'Все озвученные задачи решены и закрыты.'}</div>
       ${river}</div>
-    <div class="stats">${stat(P.length, 'всего в реестре')}${stat(inWork, 'в работе')}${stat(over.length, 'просрочено', over.length ? 'alert' : '')}${stat(closedM.length, 'закрыто за месяц', 'wide')}${stat(avg === null ? '—' : avg, 'дней в среднем на решение')}</div>
+    <div class="stats">${stat(P.length, 'всего в перечне')}${stat(inWork, 'в работе')}${stat(over.length, 'просрочено', over.length ? 'alert' : '')}${stat(closedM.length, 'закрыто за месяц', 'wide')}${stat(avg === null ? '—' : avg, 'дней в среднем на решение')}</div>
   </div>`;
 
   const prio = [...ENUM.priority.map(p => ({ label: p, value: open.filter(x => x.priority === p).length, color: PRIO_C[p], drill: 'priority=' + p })), { label: 'Без оценки', value: open.filter(x => !x.priority).length, color: '#A3AAC2' }];
   const prioCard = `<div class="card"><div class="card-h"><h3>Приоритет открытых</h3></div><div class="card-b">${bars(prio)}</div></div>`;
   const catCard = `<div class="card"><div class="card-h"><h3>Категории</h3></div><div class="card-b">${bars(countBy(P, p => p.category || 'Без категории').slice(0, 8).map(i => ({ ...i, drill: i.label === 'Без категории' ? '' : 'category=' + i.label })), '#001966')}</div></div>`;
-  const depCard = `<div class="card"><div class="card-h"><h3>Кто подаёт проблемы</h3></div><div class="card-b">${bars(countBy(P, p => p.applicant_department || '—').slice(0, 8).map(i => ({ ...i, drill: 'dept=' + i.label })), '#C9930F')}</div></div>`;
+  const depCard = `<div class="card"><div class="card-h"><h3>Кто озвучивает задачи</h3></div><div class="card-b">${bars(countBy(P, p => p.applicant_department || '—').slice(0, 8).map(i => ({ ...i, drill: 'dept=' + i.label })), '#C9930F')}</div></div>`;
 
   const byResp = new Map();
   open.filter(p => p.responsible_id).forEach(p => { const r = byResp.get(p.responsible_id) || { name: p.responsible_name, n: 0, over: 0 }; r.n++; if (p.is_overdue) r.over++; byResp.set(p.responsible_id, r); });
@@ -787,20 +787,20 @@ function viewDashboard() {
   for (let i = 0; i < 8; i++) { const a = new Date(start); a.setDate(a.getDate() + i * 7); const b = new Date(a); b.setDate(b.getDate() + 7); weeks.push({ a, c: P.filter(p => new Date(p.created_at) >= a && new Date(p.created_at) < b).length, z: P.filter(p => p.closed_at && new Date(p.closed_at) >= a && new Date(p.closed_at) < b).length }); }
   const wmax = Math.max(1, ...weeks.flatMap(w => [w.c, w.z]));
   const W = 620, H = 180, pad = 10, bw = (W - pad * 2) / 8;
-  const svg = `<svg viewBox="0 0 ${W} ${H + 28}" width="100%" style="display:block" role="img" aria-label="Поданные и закрытые проблемы по неделям">
+  const svg = `<svg viewBox="0 0 ${W} ${H + 28}" width="100%" style="display:block" role="img" aria-label="Озвученные и закрытые задачи по неделям">
     ${[0, .5, 1].map(f => `<line x1="${pad}" x2="${W - pad}" y1="${H - f * (H - 20)}" y2="${H - f * (H - 20)}" stroke="#ECEFF5"/>`).join('')}
     ${weeks.map((w, i) => { const x = pad + i * bw + bw * .2, cw = bw * .28, hc = w.c / wmax * (H - 20), hz = w.z / wmax * (H - 20);
-      return `<rect x="${x}" y="${H - hc}" width="${cw}" height="${hc}" rx="4" fill="#001966"><title>Подано: ${w.c}</title></rect>
+      return `<rect x="${x}" y="${H - hc}" width="${cw}" height="${hc}" rx="4" fill="#001966"><title>Озвучено: ${w.c}</title></rect>
               <rect x="${x + cw + 4}" y="${H - hz}" width="${cw}" height="${hz}" rx="4" fill="#C9930F"><title>Закрыто: ${w.z}</title></rect>
               ${w.c ? `<text x="${x + cw / 2}" y="${H - hc - 6}" text-anchor="middle" font-size="11" font-weight="700" fill="#001966">${w.c}</text>` : ''}
               <text x="${pad + i * bw + bw / 2}" y="${H + 20}" text-anchor="middle" font-size="11" fill="#5E6785">${w.a.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</text>`; }).join('')}
   </svg>`;
-  const trendCard = `<div class="card"><div class="card-h"><h3>Поток проблем по неделям</h3><span class="muted"><span class="legend" style="display:inline-flex"><span style="--c:#001966"><i></i>подано</span><span style="--c:#C9930F"><i></i>закрыто</span></span></span></div><div class="card-b">${svg}</div></div>`;
+  const trendCard = `<div class="card"><div class="card-h"><h3>Поток задач по неделям</h3><span class="muted"><span class="legend" style="display:inline-flex"><span style="--c:#001966"><i></i>озвучено</span><span style="--c:#C9930F"><i></i>закрыто</span></span></span></div><div class="card-b">${svg}</div></div>`;
 
   const hot = open.filter(p => p.priority === 'Критический' || p.is_overdue || (p.days_left !== null && p.days_left <= 7))
     .sort((a, b) => (b.is_overdue - a.is_overdue) || ((a.days_left ?? 999) - (b.days_left ?? 999)));
   const hotLi = p => problemLi(p).replace('class="li"', `class="li" style="--c:${p.is_overdue || p.priority === 'Критический' ? '#D23B3B' : '#C9930F'}"`);
-  const hotCard = `<div class="card lift"><div class="card-h"><h3>Горящие</h3><span class="muted">критические, просроченные и с дедлайном в ближайшие 7 дней</span></div><div class="card-b hot">${hot.length ? hot.slice(0, 8).map(hotLi).join('') : '<div class="empty">Горящих проблем нет</div>'}</div></div>`;
+  const hotCard = `<div class="card lift"><div class="card-h"><h3>Горящие</h3><span class="muted">критические, просроченные и с дедлайном в ближайшие 7 дней</span></div><div class="card-b hot">${hot.length ? hot.slice(0, 8).map(hotLi).join('') : '<div class="empty">Горящих задач нет</div>'}</div></div>`;
   const rector = open.filter(p => p.rector_decision === 'Да' || p.decision_level === 'Требуется решение ректора');
   const rectorCard = `<div class="card lift"><div class="card-h"><h3>Нужно решение ректора</h3><span class="muted">${rector.length}</span></div><div class="card-b hot">${rector.length ? rector.map(p => problemLi(p).replace('class="li"', 'class="li" style="--c:#001966"')).join('') : '<div class="empty">Вопросов на уровень ректора нет</div>'}</div></div>`;
 
@@ -832,7 +832,7 @@ const dDiff = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T0
 const MON = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
 function gantt(list, o = {}) {
   const zoom = o.zoom || 'day';
-  if (!list.length) return '<div class="empty">Нет проблем для графика</div>';
+  if (!list.length) return '<div class="empty">Нет задач для графика</div>';
   const today = todayISO();
   const rows = list.map(p => {
     const start = p.submitted_on || String(p.created_at).slice(0, 10);
@@ -862,7 +862,7 @@ function gantt(list, o = {}) {
     } else if (wd === 1 && Math.abs(dDiff(d, today)) > 3) ticks += `<div class="g-tick" style="left:${x}px">${String(dt.getDate()).padStart(2, '0')}.${String(dt.getMonth() + 1).padStart(2, '0')}</div>`;
   }
   const tx = X(today) + dw / 2;
-  const head = `<div class="g-head"><div class="g-corner">Проблема и ответственный</div><div class="g-scale" style="width:${W}px">${months}${ticks}<div class="g-pill" style="left:${tx}px">Сегодня</div></div></div>`;
+  const head = `<div class="g-head"><div class="g-corner">Задача и ответственный</div><div class="g-scale" style="width:${W}px">${months}${ticks}<div class="g-pill" style="left:${tx}px">Сегодня</div></div></div>`;
   const rowHtml = r => {
     const p = r.p, c = STATUS_C[p.status], left = X(r.start), width = Math.max(dw, (dDiff(r.start, r.end) + 1) * dw);
     const label = `№${p.id}${p.priority ? ' · ' + p.priority : ''}`;
@@ -904,9 +904,9 @@ function viewTimeline() {
   const list = S.problems.filter(p => !T.open || isOpen(p)).sort((a, b) => (a.submitted_on || '').localeCompare(b.submitted_on || '') || a.id - b.id);
   const tbd = list.filter(p => !p.agreed_deadline).length, over = list.filter(p => p.is_overdue).length;
   const soon = list.filter(p => isOpen(p) && p.days_left !== null && p.days_left >= 0 && p.days_left <= 7).length;
-  const hero = `<div class="band-row"><div><h1>Таймлайн</h1><div class="sub">Сроки всех проблем на одной шкале: от подачи до дедлайна</div><div class="rule"></div>
+  const hero = `<div class="band-row"><div><h1>Таймлайн</h1><div class="sub">Сроки всех задач на одной шкале: от озвучивания до дедлайна</div><div class="rule"></div>
     <div class="band-chips"><span class="band-chip"><b>${list.length}</b>в графике</span><span class="band-chip ${over ? 'alert' : ''}"><b>${over}</b>просрочено</span><span class="band-chip"><b>${soon}</b>дедлайн в ближайшие 7 дней</span><span class="band-chip"><b>${tbd}</b>без согласованного срока</span></div></div>
-    <div class="actions"><a class="btn gold" href="#/new">${ICON.plus} Подать проблему</a></div></div>`;
+    <div class="actions"><a class="btn gold" href="#/new">${ICON.plus} Озвучить задачу</a></div></div>`;
   const body = `<div class="card lift" style="overflow:hidden">
     <div class="tl-bar"><div class="seg" role="group" aria-label="Масштаб"><button data-zoom="day" class="${T.zoom === 'day' ? 'on' : ''}">Дни</button><button data-zoom="week" class="${T.zoom === 'week' ? 'on' : ''}">Недели</button></div>
       <select class="select" id="tlGroup" style="width:auto;min-width:200px;padding-top:8px;padding-bottom:8px">${[['', 'Без группировки'], ['status', 'По статусу'], ['resp', 'По ответственному'], ['priority', 'По приоритету'], ['dept', 'По подразделению']].map(([v, t]) => `<option value="${v}" ${T.group === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
@@ -929,9 +929,9 @@ function viewTimeline() {
 const palGo = href => href.startsWith('#') ? (location.hash = href) : window.open(href, '_blank');
 function openPalette() {
   if ($('.pal-bg') || !S.me) return;
-  const cmds = [['＋', 'Подать проблему', '#/new'], ['▦', 'Дашборд', '#/dashboard'], ['≡', 'Реестр проблем', '#/registry'], ['▤', 'Таймлайн', '#/timeline'], ['✓', 'Мои задачи', '#/my'], ['▶', 'Инструкция: как работает система', 'guide.html'], ...(isAdmin() ? [['⛨', 'Админ OEC: ждут оценки', '#/admin/queue']] : [])];
+  const cmds = [['＋', 'Озвучить задачу', '#/new'], ['▦', 'Дашборд', '#/dashboard'], ['≡', 'Перечень зон развития', '#/registry'], ['▤', 'Таймлайн', '#/timeline'], ['✓', 'Мои задачи', '#/my'], ['▶', 'Инструкция: как работает система', 'guide.html'], ...(isAdmin() ? [['⛨', 'Админ OEC: ждут оценки', '#/admin/queue']] : [])];
   const bg = document.createElement('div'); bg.className = 'pal-bg';
-  bg.innerHTML = `<div class="pal" role="dialog" aria-label="Поиск"><input placeholder="Найти проблему по названию, номеру или подразделению" aria-label="Поиск"><div class="pal-list"></div><div class="pal-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> выбрать</span><span><kbd>Enter</kbd> открыть</span><span><kbd>Esc</kbd> закрыть</span></div></div>`;
+  bg.innerHTML = `<div class="pal" role="dialog" aria-label="Поиск"><input placeholder="Найти задачу по названию, номеру или подразделению" aria-label="Поиск"><div class="pal-list"></div><div class="pal-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> выбрать</span><span><kbd>Enter</kbd> открыть</span><span><kbd>Esc</kbd> закрыть</span></div></div>`;
   document.body.appendChild(bg);
   const inp = $('input', bg), listEl = $('.pal-list', bg); let items = [], sel = 0;
   const close = () => bg.remove();
@@ -942,7 +942,7 @@ function openPalette() {
     items = [...probs.map(p => ({ href: '#/p/' + p.id, html: `<div class="ic" style="background:color-mix(in srgb,${STATUS_C[p.status]} 14%,#fff);color:${STATUS_C[p.status]};font-weight:700;font-size:11px">${p.id}</div><div style="min-width:0"><div class="t">${h(p.title)}</div><div class="s">${h(p.status)}${p.responsible_name ? ', ' + h(p.responsible_name) : ''}</div></div>` })),
              ...cm.map(c => ({ href: c[2], html: `<div class="ic">${c[0]}</div><div class="t">${c[1]}</div>` }))];
     sel = Math.min(sel, Math.max(0, items.length - 1));
-    listEl.innerHTML = (probs.length ? '<div class="pal-sec">Проблемы</div>' : '') + items.slice(0, probs.length).map((it, i) => `<div class="pal-it ${i === sel ? 'on' : ''}" data-i="${i}">${it.html}</div>`).join('') +
+    listEl.innerHTML = (probs.length ? '<div class="pal-sec">Задачи</div>' : '') + items.slice(0, probs.length).map((it, i) => `<div class="pal-it ${i === sel ? 'on' : ''}" data-i="${i}">${it.html}</div>`).join('') +
       (cm.length ? '<div class="pal-sec">Перейти</div>' : '') + items.slice(probs.length).map((it, i) => `<div class="pal-it ${i + probs.length === sel ? 'on' : ''}" data-i="${i + probs.length}">${it.html}</div>`).join('') +
       (!items.length ? '<div class="empty">Ничего не найдено</div>' : '');
     $$('.pal-it', listEl).forEach(el => { el.addEventListener('click', () => { palGo(items[+el.dataset.i].href); close(); }); el.addEventListener('mousemove', () => { if (sel !== +el.dataset.i) { sel = +el.dataset.i; render(); } }); });
@@ -960,7 +960,7 @@ function openPalette() {
 document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); } if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); openPalette(); } });
 
 /* =====================================================================
-   Реестр
+   Перечень
    ===================================================================== */
 function filtered() {
   const f = S.filters, q = f.q.trim().toLowerCase();
@@ -994,7 +994,7 @@ function viewRegistry() {
       <button class="btn ghost sm" id="freset">Сбросить</button>
     </div>
     <div class="table-wrap">
-      <table class="t"><thead><tr>${th('id', '№')}${th('title', 'Проблема')}${th('status', 'Статус')}${th('priority', 'Приоритет')}${th('resp', 'Ответственный')}${th('deadline', 'Дедлайн')}<th>Подана</th></tr></thead>
+      <table class="t"><thead><tr>${th('id', '№')}${th('title', 'Задача')}${th('status', 'Статус')}${th('priority', 'Приоритет')}${th('resp', 'Ответственный')}${th('deadline', 'Дедлайн')}<th>Озвучена</th></tr></thead>
       <tbody>${rows.map(p => `<tr data-go="p/${p.id}" class="${p.is_overdue ? 'over' : ''}">
         <td class="pill-id">${p.id}</td>
         <td><div class="ttl">${h(p.title)}</div><div class="sub">${h(p.applicant_department)}, ${h(p.applicant_name)}${p.category ? ` <span class="badge" style="--c:#5E6785;padding:0 8px;margin-left:4px">${h(p.category)}</span>` : ''}</div></td>
@@ -1003,7 +1003,7 @@ function viewRegistry() {
         <td>${dlChip(p)}</td><td class="nowrap muted small">${fmtD(p.submitted_on)}</td></tr>`).join('')}</tbody></table>
       ${rows.length ? '' : '<div class="empty">Ничего не найдено. Сбросьте фильтры или измените запрос.</div>'}
     </div></div>`;
-  mount(shell('registry', 'Реестр проблем', `Показано ${rows.length} из ${S.problems.length}`, `<button class="btn on-navy" id="exp">${ICON.dl} Выгрузить в Excel</button><a class="btn gold" href="#/new">${ICON.plus} Подать проблему</a>`, body, { tall: true }));
+  mount(shell('registry', 'Перечень зон развития', `Показано ${rows.length} из ${S.problems.length}`, `<button class="btn on-navy" id="exp">${ICON.dl} Выгрузить в Excel</button><a class="btn gold" href="#/new">${ICON.plus} Озвучить задачу</a>`, body, { tall: true }));
   const save = () => { ls.set('pgc_filters', S.filters); viewRegistry(); };
   const fq = $('#fq'); fq.addEventListener('input', () => { S.filters.q = fq.value; clearTimeout(fq._t); fq._t = setTimeout(() => { save(); const n = $('#fq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
   $$('[data-f]').forEach(s => s.addEventListener('change', () => { S.filters[s.dataset.f] = s.value; save(); }));
@@ -1014,24 +1014,24 @@ function viewRegistry() {
 }
 function exportXlsx(rows) {
   if (!window.XLSX) return toast('Библиотека Excel не загрузилась', true);
-  const r1 = [['№', 'Дата подачи', 'ФИО заявителя', 'Должность', 'Подразделение-заявитель', 'Краткое название проблемы', 'Описание проблемы / факты', 'На что влияет проблема', 'Последствия, если не решить', 'Желаемый срок решения', 'Предлагаемое решение', 'Какие подразделения вовлечены', 'Контактные лица / участники', 'Материалы / ссылка'],
+  const r1 = [['№', 'Дата подачи', 'ФИО заявителя', 'Должность', 'Подразделение-заявитель', 'Краткое название задачи', 'Описание задачи / факты', 'На что влияет задача', 'Последствия, если не решить', 'Желаемый срок решения', 'Предлагаемое решение', 'Какие подразделения вовлечены', 'Контактные лица / участники', 'Материалы / ссылка'],
     ...rows.map(p => [p.id, fmtD(p.submitted_on), p.applicant_name, p.applicant_position, p.applicant_department, p.title, p.description, p.impact, p.consequences, [p.desired_deadline ? fmtD(p.desired_deadline) : '', p.desired_deadline_note].filter(Boolean).join(' — '), p.proposed_solution, (p.involved_departments || []).join(', '), p.contacts, p.materials])];
-  const r2 = [['№ проблемы', 'Категория проблемы', 'Приоритет', 'Срочность', 'Масштаб влияния', 'Уровень решения', 'Ведущее подразделение', 'Связанные подразделения', 'Ответственный за решение', 'Согласованный срок', 'Требуется решение ректора?', 'Решение / следующий шаг', 'Статус', 'Дата контрольной проверки', 'Комментарий координатора'],
+  const r2 = [['№ задачи', 'Категория задачи', 'Приоритет', 'Срочность', 'Масштаб влияния', 'Уровень решения', 'Ведущее подразделение', 'Связанные подразделения', 'Ответственный за решение', 'Согласованный срок', 'Требуется решение ректора?', 'Решение / следующий шаг', 'Статус', 'Дата контрольной проверки', 'Комментарий координатора'],
     ...rows.map(p => [p.id, p.category, p.priority, p.urgency, p.scale, p.decision_level, p.lead_department, (p.related_departments || []).join(', '), p.responsible_name, p.agreed_deadline ? fmtD(p.agreed_deadline) : '', p.rector_decision, p.next_step, p.status, p.control_date ? fmtD(p.control_date) : '', p.coordinator_comment])];
   const wb = XLSX.utils.book_new();
   const s1 = XLSX.utils.aoa_to_sheet(r1); s1['!cols'] = [7, 14, 22, 20, 25, 30, 48, 30, 36, 20, 38, 35, 28, 32].map(wch => ({ wch }));
   const s2 = XLSX.utils.aoa_to_sheet(r2); s2['!cols'] = [16, 25, 16, 16, 22, 25, 26, 32, 26, 18, 22, 38, 18, 20, 38].map(wch => ({ wch }));
-  XLSX.utils.book_append_sheet(wb, s1, 'Реестр проблем'); XLSX.utils.book_append_sheet(wb, s2, 'Оценка OEC');
+  XLSX.utils.book_append_sheet(wb, s1, 'Перечень зон развития'); XLSX.utils.book_append_sheet(wb, s2, 'Оценка OEC');
   XLSX.writeFile(wb, `OEC_Reestr_${todayISO()}.xlsx`);
 }
 
 /* =====================================================================
-   Карточка проблемы
+   Карточка задачи
    ===================================================================== */
 async function viewProblem(id) {
-  mount(shell('registry', 'Проблема №' + h(id), 'Загружаем карточку…', '', SKELETON, { tall: true }));
+  mount(shell('registry', 'Задача №' + h(id), 'Загружаем карточку…', '', SKELETON, { tall: true }));
   let p;
-  try { p = await api.problem(id); } catch (e) { $('#content').innerHTML = `<div class="empty">Проблема не найдена</div>`; return; }
+  try { p = await api.problem(id); } catch (e) { $('#content').innerHTML = `<div class="empty">Задача не найдена</div>`; return; }
   if (isAdmin() && p.status === 'Новая') { try { await api.update(p.id, { status: 'На оценке' }); p = await api.problem(id); reloadProblems(); } catch {} }
   const [act, atts] = await Promise.all([api.activity(id), api.attachments(id)]);
   const admin = isAdmin(), mine = p.submitted_by === S.me.id, resp = p.responsible_id === S.me.id;
@@ -1042,7 +1042,7 @@ async function viewProblem(id) {
   const tags = arr => arr?.length ? `<div class="tags">${arr.map(t => `<span class="tag">${h(t)}</span>`).join('')}</div>` : '<span class="muted">—</span>';
   const appCard = `<div class="card lift"><div class="card-h"><h3>Заявка</h3>${canEdit ? `<a class="btn sm" style="margin-left:auto" href="#/edit/${p.id}">Редактировать</a>` : ''}</div><div class="card-b">
     <div class="kv" style="padding-bottom:12px;border-bottom:1px solid var(--line-2)"><dt>Заявитель</dt><dd>${h(p.applicant_name)}${p.applicant_position ? ' · ' + h(p.applicant_position) : ''}</dd><dt>Подразделение</dt><dd>${h(p.applicant_department)}</dd><dt>Дата подачи</dt><dd>${fmtD(p.submitted_on)}</dd></div>
-    ${field('Описание проблемы / факты', p.description)}${field('На что влияет проблема', p.impact)}${field('Последствия, если не решить', p.consequences)}
+    ${field('Описание задачи / факты', p.description)}${field('На что влияет задача', p.impact)}${field('Последствия, если не решить', p.consequences)}
     ${field('Желаемый срок решения', [p.desired_deadline ? fmtD(p.desired_deadline) : '', p.desired_deadline_note].filter(Boolean).join(' — '))}
     ${field('Предлагаемое решение', p.proposed_solution)}
     <div class="sec"><h4>Какие подразделения вовлечены</h4>${tags(p.involved_departments)}</div>
@@ -1058,7 +1058,7 @@ async function viewProblem(id) {
   const actText = a => {
     const who = `<b>${h(a.author?.full_name || a.author?.email || 'Система')}</b>`;
     switch (a.kind) {
-      case 'created': return `${who} подал(а) проблему`;
+      case 'created': return `${who} озвучил(а) задачу`;
       case 'comment': return `${who} оставил(а) комментарий`;
       case 'status': return `${who} изменил(а) статус: ${statusB(a.old_value)} → ${statusB(a.new_value)}`;
       case 'assign': return a.new_value ? `${who} назначил(а) ответственного: <b>${h(a.new_value)}</b>` : `${who} снял(а) ответственного`;
@@ -1105,7 +1105,7 @@ async function viewProblem(id) {
   } else {
     const kv = [['Категория', p.category], ['Приоритет', p.priority ? prioB(p.priority) : null, 1], ['Срочность', p.urgency], ['Масштаб влияния', p.scale], ['Уровень решения', p.decision_level], ['Решение ректора', p.rector_decision], ['Ведущее подразделение', p.lead_department], ['Связанные подразделения', (p.related_departments || []).join(', ')], ['Следующий шаг', p.next_step], ['Контрольная проверка', p.control_date ? fmtD(p.control_date) : ''], ['Комментарий координатора', p.coordinator_comment]];
     assessCard = `<div class="card lift"><div class="assess-h"><h3>Оценка OEC</h3><div>Заполняют администраторы OEC</div></div><div class="card-b" style="padding-top:18px">
-      ${p.category || p.priority ? `<dl class="kv">${kv.map(([k, v, raw]) => `<dt>${k}</dt><dd class="pre">${v ? (raw ? v : h(v)) : '<span class="muted">—</span>'}</dd>`).join('')}</dl>` : '<div class="muted">Проблема ещё не оценена координатором OEC.</div>'}</div></div>`;
+      ${p.category || p.priority ? `<dl class="kv">${kv.map(([k, v, raw]) => `<dt>${k}</dt><dd class="pre">${v ? (raw ? v : h(v)) : '<span class="muted">—</span>'}</dd>`).join('')}</dl>` : '<div class="muted">Задача ещё не оценена координатором OEC.</div>'}</div></div>`;
   }
 
   const dlBig = !p.agreed_deadline ? `<div class="big" style="font-size:24px;color:rgba(255,255,255,.55)">без срока</div><div class="cap">дедлайн не назначен</div>`
@@ -1113,13 +1113,13 @@ async function viewProblem(id) {
     : p.days_left < 0 ? `<div class="big over">${-p.days_left}</div><div class="cap">${plural(-p.days_left, 'день', 'дня', 'дней')} просрочки, срок был ${fmtD(p.agreed_deadline)}</div>`
     : p.days_left === 0 ? `<div class="big over">сегодня</div><div class="cap">дедлайн ${fmtD(p.agreed_deadline)}</div>`
     : `<div class="big">${p.days_left}</div><div class="cap">${plural(p.days_left, 'день', 'дня', 'дней')} до дедлайна, ${fmtD(p.agreed_deadline)}</div>`;
-  const dHero = `<a class="back" href="#/registry">${ICON.back} Реестр проблем</a>
+  const dHero = `<a class="back" href="#/registry">${ICON.back} Перечень зон развития</a>
     <div class="d-hero"><div><div class="d-badges"><span class="pill-id" style="color:var(--gold-hi)">№${p.id}</span>${statusB(p.status)}${p.priority ? `<span class="badge" style="--c:${PRIO_C[p.priority]}">${h(p.priority)}</span>` : ''}${p.category ? `<span class="badge">${h(p.category)}</span>` : ''}</div>
       <h1 class="d-title">${h(p.title)}</h1>
-      <div class="d-meta">Подал(а) ${h(p.applicant_name)}, ${h(p.applicant_department)}, ${fmtD(p.submitted_on)}${p.closed_at ? `. Закрыта ${fmtD(p.closed_at)}` : ''}</div></div>
+      <div class="d-meta">Озвучил(а) ${h(p.applicant_name)}, ${h(p.applicant_department)}, ${fmtD(p.submitted_on)}${p.closed_at ? `. Закрыта ${fmtD(p.closed_at)}` : ''}</div></div>
       <div class="d-dl">${dlBig}<div class="resp">Ответственный: <b>${p.responsible_name ? h(p.responsible_name) : 'не назначен'}</b></div></div></div>`;
   const body = `<div class="d-grid"><div>${appCard}${matCard}${tlCard}</div><div>${assessCard}</div></div>`;
-  mount(shell('registry', 'Карточка проблемы', '', '', body, { hero: dHero, tall: true }));
+  mount(shell('registry', 'Карточка задачи', '', '', body, { hero: dHero, tall: true }));
 
   $$('[data-file]').forEach(b => b.addEventListener('click', async () => { try { window.open(await api.fileUrl(b.dataset.file), '_blank'); } catch (e) { toast(errMsg(e), true); } }));
   $('#upl')?.addEventListener('change', async e => { try { for (const f of e.target.files) await api.upload(p.id, f); toast('Файл прикреплён'); viewProblem(id); } catch (er) { toast(errMsg(er), true); } });
@@ -1135,7 +1135,7 @@ async function viewProblem(id) {
 }
 
 /* =====================================================================
-   Мастер подачи (вопрос на каждое поле)
+   Мастер (вопрос на каждое поле)
    ===================================================================== */
 async function viewWizard(editId) {
   let editing = null;
@@ -1166,7 +1166,7 @@ async function viewWizard(editId) {
       case 'files': return `<textarea class="textarea" data-k="materials" placeholder="Ссылки и названия документов" style="min-height:110px">${h(d.materials)}</textarea>
         <label class="btn" style="margin-top:12px">📎 Прикрепить файлы<input type="file" id="wzfiles" multiple hidden></label>
         <div id="flist" style="margin-top:10px">${W.files.map((f, i) => `<div class="att">📎 <span class="n">${h(f.name)}</span><span class="muted small">${(f.size / 1024).toFixed(0)} КБ</span><button class="btn sm ghost" data-frm="${i}">Убрать</button></div>`).join('')}</div>
-        ${editing ? '<div class="muted small">Новые файлы можно добавить и в карточке проблемы.</div>' : ''}`;
+        ${editing ? '<div class="muted small">Новые файлы можно добавить и в карточке задачи.</div>' : ''}`;
       default: return `<textarea class="textarea" data-k="${q.field_key}" autofocus>${h(d[q.field_key])}</textarea>`;
     }
   }
@@ -1184,8 +1184,8 @@ async function viewWizard(editId) {
   function render() {
     const s = steps[W.step], last = W.step === steps.length - 1, reach = maxReached();
     const pct = Math.round(W.step / (steps.length - 1) * 100);
-    const head = s.key === '_who' ? `<div class="wz-k">Шаг 1 из ${steps.length}</div><div class="wz-q">Кто подаёт проблему?</div><div class="wz-hint">Данные взяты из вашего профиля — проверьте их.</div>`
-      : last ? `<div class="wz-k">Последний шаг</div><div class="wz-q">Проверьте заявку</div><div class="wz-hint">После отправки администраторы OEC получат уведомление и оценят проблему.</div>`
+    const head = s.key === '_who' ? `<div class="wz-k">Шаг 1 из ${steps.length}</div><div class="wz-q">Кто озвучивает задачу?</div><div class="wz-hint">Данные взяты из вашего профиля — проверьте их.</div>`
+      : last ? `<div class="wz-k">Последний шаг</div><div class="wz-q">Проверьте заявку</div><div class="wz-hint">После отправки администраторы OEC получат уведомление и оценят задачу.</div>`
       : `<div class="wz-k">Шаг ${W.step + 1} из ${steps.length}. ${h(s.q.label)}${s.q.required ? ' <span class="req">*</span>' : ''}</div><div class="wz-q">${h(s.q.question)}</div><div class="wz-hint">${h(s.q.hint)}</div>${s.q.example ? `<div class="wz-ex"><b>Пример:</b> ${h(s.q.example)}</div>` : '<div style="height:12px"></div>'}`;
     const body = `<div class="wz">
       <div class="card wz-steps lift">${steps.map((x, i) => `<div class="wz-step ${i === W.step ? 'cur' : isFilledStep(x) ? 'done' : ''}" data-jump="${i <= reach ? i : ''}"><span class="n">${i !== W.step && isFilledStep(x) ? '✓' : i + 1}</span>${h(x.label)}</div>`).join('')}</div>
@@ -1195,7 +1195,7 @@ async function viewWizard(editId) {
           ${!editing && !last ? '<span class="muted small">Черновик сохраняется автоматически</span>' : ''}
           ${last ? `<button class="btn gold" id="wzsend">${editing ? 'Сохранить изменения' : 'Отправить в OEC'}</button>` : `<button class="btn primary" id="wznext">Далее</button>`}</div>
       </div></div>`;
-    mount(shell('new', editing ? `Редактирование заявки №${editing.id}` : 'Новая проблема', editing ? 'Изменения увидят администраторы OEC' : 'Ответьте на вопросы по очереди. Обязательные отмечены звёздочкой', editing ? `<a class="btn on-navy" href="#/p/${editing.id}">Отмена</a>` : (Object.values(ls.get('pgc_draft', {})).some(v => Array.isArray(v) ? v.length : v) ? '<button class="btn on-navy" id="wzclear">Очистить черновик</button>' : ''), body, { tall: true }));
+    mount(shell('new', editing ? `Редактирование заявки №${editing.id}` : 'Новая задача', editing ? 'Изменения увидят администраторы OEC' : 'Ответьте на вопросы по очереди. Обязательные отмечены звёздочкой', editing ? `<a class="btn on-navy" href="#/p/${editing.id}">Отмена</a>` : (Object.values(ls.get('pgc_draft', {})).some(v => Array.isArray(v) ? v.length : v) ? '<button class="btn on-navy" id="wzclear">Очистить черновик</button>' : ''), body, { tall: true }));
     bind();
   }
   function isFilledStep(x) { if (x.key === '_who') return valid(0); if (x.key === '_review') return false; return isFilled(x.key); }
@@ -1236,7 +1236,7 @@ async function viewWizard(editId) {
       if (!editing) ls.del('pgc_draft');
       if (!S.me.full_name && row.applicant_name) { await api.updateProfile(S.me.id, { full_name: row.applicant_name, position: row.applicant_position, department: row.applicant_department }); S.me = await api.me(); }
       await reloadProblems();
-      toast(editing ? 'Изменения сохранены' : `Проблема №${p.id} отправлена в OEC`);
+      toast(editing ? 'Изменения сохранены' : `Задача №${p.id} отправлена в OEC`);
       location.hash = '#/p/' + p.id;
     } catch (e) { toast(errMsg(e), true); btn.disabled = false; btn.textContent = editing ? 'Сохранить изменения' : 'Отправить в OEC'; }
   }
@@ -1255,10 +1255,10 @@ function viewMy() {
   const group = (t, arr, c) => arr.length ? `<div class="card" style="margin-bottom:16px"><div class="card-h"><h3 style="color:${c || 'inherit'}">${t}</h3><span class="muted">${arr.length}</span></div><div class="card-b">${arr.map(problemLi).join('')}</div></div>` : '';
   const body = `<div class="grid g-2"><div>
       <h3 style="font-size:15px;margin:0 0 12px">Я ответственный</h3>
-      ${open.length || done.length ? group('🔴 Просрочено', over, 'var(--danger)') + group('⏳ Дедлайн в ближайшие 7 дней', soon, 'var(--warn)') + group('В работе', rest) + group('Выполненные и закрытые', done) : '<div class="card"><div class="empty">Вам пока не назначено ни одной проблемы</div></div>'}
+      ${open.length || done.length ? group('🔴 Просрочено', over, 'var(--danger)') + group('⏳ Дедлайн в ближайшие 7 дней', soon, 'var(--warn)') + group('В работе', rest) + group('Выполненные и закрытые', done) : '<div class="card"><div class="empty">Вам пока не назначено ни одной задачи</div></div>'}
     </div><div>
       <h3 style="font-size:15px;margin:0 0 12px">Мои заявки</h3>
-      ${subm.length ? group('Поданные мной', subm) : `<div class="card"><div class="empty">Вы ещё не подавали проблем<br><br><a class="btn gold" href="#/new">${ICON.plus} Подать проблему</a></div></div>`}
+      ${subm.length ? group('Озвученные мной', subm) : `<div class="card"><div class="empty">Вы ещё не озвучивали задач<br><br><a class="btn gold" href="#/new">${ICON.plus} Озвучить задачу</a></div></div>`}
     </div></div>`;
   mount(shell('my', 'Мои задачи', `В работе ${open.length}, просрочено ${over.length}`, '', body));
 }
@@ -1274,18 +1274,18 @@ function viewAdmin(tab = 'queue') {
   if (tab === 'queue') {
     const q = S.problems.filter(p => isOpen(p) && (['Новая', 'На оценке'].includes(p.status) || !p.responsible_id || !p.agreed_deadline));
     body += `<div class="callout">Быстрое назначение: выберите приоритет, ответственного и срок — статус станет «В работе», ответственный получит уведомление в Telegram. Полная оценка — в карточке.</div>
-      <div class="card table-wrap"><table class="t"><thead><tr><th>№</th><th>Проблема</th><th>Статус</th><th style="min-width:150px">Приоритет</th><th style="min-width:220px">Ответственный</th><th style="min-width:150px">Срок</th><th></th></tr></thead><tbody>
+      <div class="card table-wrap"><table class="t"><thead><tr><th>№</th><th>Задача</th><th>Статус</th><th style="min-width:150px">Приоритет</th><th style="min-width:220px">Ответственный</th><th style="min-width:150px">Срок</th><th></th></tr></thead><tbody>
       ${q.map(p => `<tr data-row="${p.id}" style="cursor:default"><td class="pill-id">${p.id}</td><td><div class="ttl"><a href="#/p/${p.id}">${h(p.title)}</a></div><div class="sub">${h(p.applicant_department)} · ${fmtD(p.submitted_on)}</div></td><td>${statusB(p.status)}</td>
         <td><select class="select" name="priority">${opts(ENUM.priority, p.priority)}</select></td><td><select class="select" name="responsible_id">${peopleOpts(p.responsible_id)}</select></td>
         <td><input class="input" type="date" name="agreed_deadline" value="${p.agreed_deadline || ''}"></td><td><button class="btn primary sm" data-save="${p.id}">Назначить</button></td></tr>`).join('')}
-      </tbody></table>${q.length ? '' : '<div class="empty">Очередь пуста — все проблемы оценены и назначены 🎉</div>'}</div>`;
+      </tbody></table>${q.length ? '' : '<div class="empty">Очередь пуста — все задачи оценены и назначены 🎉</div>'}</div>`;
   } else if (tab === 'users') {
     body += `<div class="card table-wrap"><table class="t"><thead><tr><th>Пользователь</th><th>Должность</th><th>Подразделение</th><th>Telegram</th><th style="min-width:170px">Роль</th></tr></thead><tbody>
       ${S.profiles.slice().sort((a, b) => (b.role === 'pending') - (a.role === 'pending')).map(u => `<tr style="cursor:default;${u.role === 'pending' ? 'background:var(--gold-soft)' : ''}"><td><div class="ttl">${h(u.full_name || '—')}</div><div class="sub">${h(u.email)}</div></td><td>${h(u.position)}</td><td>${h(u.department)}</td><td>${u.tg_connected ? '<span class="badge" style="--c:#059669">подключён</span>' : '<span class="muted small">нет</span>'}</td>
         <td style="display:flex;gap:8px;align-items:center">${u.role === 'pending' ? `<button class="btn gold sm" data-approve="${u.id}">Подтвердить</button>` : ''}<select class="select" data-role="${u.id}" ${u.id === S.me.id ? 'disabled' : ''}>${Object.entries(ROLE_L).map(([k, v]) => `<option value="${k}" ${u.role === k ? 'selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('')}
       </tbody></table></div><div class="muted small" style="margin-top:10px">Новые сотрудники появляются здесь сразу после регистрации со статусом «Ожидает подтверждения» — до подтверждения они не видят данных. Администраторы назначают ответственных и меняют статусы и дедлайны; «Руководство» — просмотр всего.</div>`;
   } else if (tab === 'questions') {
-    body += `<div class="callout">Тексты вопросов, подсказок и примеров, которые видит сотрудник в мастере подачи. Поля реестра не меняются — только формулировки.</div>
+    body += `<div class="callout">Тексты вопросов, подсказок и примеров, которые видит сотрудник в мастере. Поля перечня не меняются — только формулировки.</div>
       ${S.questions.map(q => `<div class="card" style="margin-bottom:12px" data-q="${q.field_key}"><div class="card-h"><h3>${q.sort}. ${h(q.label)}</h3><span class="muted">${q.kind}</span></div><div class="card-b">
         <div class="field"><label>Вопрос</label><input class="input" name="question" value="${h(q.question)}"></div>
         <div class="grid2"><div class="field"><label>Подсказка</label><textarea class="textarea" name="hint" style="min-height:60px">${h(q.hint)}</textarea></div><div class="field"><label>Пример</label><textarea class="textarea" name="example" style="min-height:60px">${h(q.example)}</textarea></div></div>
@@ -1348,9 +1348,9 @@ function viewAuth(mode = 'in') {
   $('#root').innerHTML = `<div class="auth">
     <div class="auth-l band glow"><div class="ring"></div><div class="ring r2"></div>
       <img src="${LOGO}" alt="Central Asian University">
-      <h1>Реестр проблем OEC</h1>
+      <h1>Перечень зон развития OEC</h1>
       <div class="rule"></div>
-      <p>Operational Excellence Committee. Подайте проблему, и у неё появятся ответственный, срок и прозрачный ход решения.</p>
+      <p>Operational Excellence Committee. Озвучьте задачу, и у неё появятся ответственный, срок и прозрачный ход решения.</p>
       <a href="guide.html" class="btn on-navy" style="align-self:flex-start;margin-top:22px">▶ Как работает система</a>
       <div class="foot">Central Asian University, Ташкент</div></div>
     <div class="auth-r"><div class="auth-f">
@@ -1380,7 +1380,7 @@ function viewAuth(mode = 'in') {
 
 function viewSetPassword() {
   $('#root').innerHTML = `<div class="auth">
-    <div class="auth-l band glow"><div class="ring"></div><div class="ring r2"></div><img src="${LOGO}" alt="Central Asian University"><h1>Новый пароль</h1><div class="rule"></div><p>Придумайте новый пароль для входа в Реестр проблем OEC.</p></div>
+    <div class="auth-l band glow"><div class="ring"></div><div class="ring r2"></div><img src="${LOGO}" alt="Central Asian University"><h1>Новый пароль</h1><div class="rule"></div><p>Придумайте новый пароль для входа в Перечень зон развития OEC.</p></div>
     <div class="auth-r"><div class="auth-f"><h2>Смена пароля</h2><div class="muted" style="margin:6px 0 24px">Не короче 6 символов</div>
       <div class="field"><label>Новый пароль</label><input class="input" id="np1" type="password" autocomplete="new-password"></div>
       <div class="field"><label>Повторите пароль</label><input class="input" id="np2" type="password" autocomplete="new-password"></div>
