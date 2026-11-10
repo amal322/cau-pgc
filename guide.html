@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Как работает OEC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#001966;--navy-deep:#000E40;--navy-2:#0B2A86;--navy-soft:#E6EAF5;--gold:#C9930F;--gold-hi:#E3B23C;--gold-soft:#F7EBCB;--paper:#F3F4F8;--ink:#0A1538;--ink-2:#2E3756;--muted:#5E6785;--line:#DEE2EC;--line-2:#ECEFF5;--ok:#2DBE82;--danger:#D23B3B;--display:'Unbounded',Onest,system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Onest,system-ui,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.55}
+a{color:var(--navy-2)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* шапка */
+.hero{background:radial-gradient(rgba(255,255,255,.055) 1px,transparent 1.2px) 0 0/22px 22px,var(--navy);color:#fff;padding:28px 40px 120px;position:relative;overflow:hidden;isolation:isolate}
+.hero::before{content:"";position:absolute;right:-200px;top:-340px;width:900px;height:760px;background:radial-gradient(closest-side,rgba(227,178,60,.32),transparent 70%);z-index:-1;animation:drift 24s ease-in-out infinite alternate}
+.hero::after{content:"";position:absolute;left:-260px;bottom:-380px;width:900px;height:700px;background:radial-gradient(closest-side,rgba(64,112,255,.36),transparent 70%);z-index:-1;animation:drift2 28s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(-220px,120px) scale(1.12)}}
+@keyframes drift2{to{transform:translate(240px,-80px)}}
+.top{display:flex;align-items:center;gap:16px;max-width:1240px;margin:0 auto}
+.top img{width:96px;clip-path:inset(0 6% 0 0)}
+.top .sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:11px;padding:10px 16px;font-weight:600;text-decoration:none;border:1px solid transparent;cursor:pointer;font:600 14px Onest,sans-serif}
+.btn.gold{background:var(--gold);color:var(--navy-deep)} .btn.gold:hover{background:var(--gold-hi)}
+.btn.glass{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff} .btn.glass:hover{background:rgba(255,255,255,.14)}
+.hero-c{max-width:1240px;margin:46px auto 0}
+.hero h1{font-family:var(--display);font-weight:600;font-size:44px;line-height:1.08;letter-spacing:-.025em;margin:0;max-width:18ch}
+.hero p{color:rgba(255,255,255,.75);font-size:17px;max-width:60ch;margin:16px 0 0}
+.rule{width:56px;height:3px;background:var(--gold);border-radius:2px;margin-top:18px}
+
+/* плеер */
+.wrap{max-width:1240px;margin:-84px auto 0;padding:0 40px;position:relative;z-index:2}
+.player{display:grid;grid-template-columns:300px minmax(0,1fr);background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 30px 60px -30px rgba(0,25,102,.45)}
+.steps{border-right:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:4px;background:#FBFCFE}
+.step{position:relative;display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:13px;cursor:pointer;border:0;background:none;text-align:left;font:inherit;color:var(--muted);overflow:hidden}
+.step:hover{background:var(--line-2)}
+.step .n{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font:600 12px var(--display);border:1.5px solid var(--line);background:#fff;color:var(--muted)}
+.step b{display:block;color:var(--ink);font-size:14px;font-weight:600;line-height:1.3}
+.step span{font-size:12.5px;line-height:1.4;display:block;margin-top:2px}
+.step.done .n{background:var(--navy);border-color:var(--navy);color:#fff}
+.step.on{background:var(--gold-soft)} .step.on .n{background:var(--gold);border-color:var(--gold);color:var(--navy-deep)}
+.step .bar{position:absolute;left:0;bottom:0;height:3px;background:var(--gold);width:0}
+.step.on .bar{animation:fill var(--dur,9s) linear forwards}
+.paused .step.on .bar{animation-play-state:paused}
+@keyframes fill{to{width:100%}}
+.stage-wrap{display:flex;flex-direction:column;min-width:0}
+.stage-box{position:relative;background:linear-gradient(180deg,#EEF1F8,#E5E9F3);padding:26px;flex:1;display:flex;align-items:center;justify-content:center;min-height:520px;overflow:hidden}
+.scaler{width:860px;height:540px;transform-origin:center center;flex:none}
+.stage{position:relative;width:860px;height:540px;border-radius:16px;background:#fff;box-shadow:0 24px 50px -24px rgba(0,25,102,.45),0 0 0 1px rgba(0,25,102,.08);overflow:hidden}
+.chrome{height:34px;background:#F4F6FA;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px;padding:0 14px}
+.chrome i{width:10px;height:10px;border-radius:50%;background:#D7DCE6}
+.chrome .url{margin-left:14px;background:#fff;border:1px solid var(--line);border-radius:7px;font-size:11.5px;color:var(--muted);padding:3px 12px;flex:1;max-width:380px}
+.scene{position:absolute;inset:34px 0 0 0}
+.cursor{position:absolute;left:0;top:0;width:22px;height:22px;z-index:50;transition:transform .7s cubic-bezier(.45,.05,.25,1);pointer-events:none;transform:translate(700px,420px)}
+.cursor svg{width:22px;height:22px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}
+.cursor::after{content:"";position:absolute;left:-9px;top:-9px;width:24px;height:24px;border-radius:50%;background:rgba(201,147,15,.45);transform:scale(0);opacity:0}
+.cursor.down::after{animation:ripple .45s ease-out}
+@keyframes ripple{from{transform:scale(.2);opacity:1}to{transform:scale(1.6);opacity:0}}
+.ctrl{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
+.ctrl button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 13px;cursor:pointer;font:600 13px Onest,sans-serif;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+.ctrl button:hover{background:var(--line-2)}
+.ctrl .cap{margin-left:auto;font-size:13px;color:var(--muted)}
+
+/* мок-интерфейс внутри сцен */
+.m-side{position:absolute;left:0;top:0;bottom:0;width:150px;background:var(--navy);padding:14px 10px;color:rgba(255,255,255,.7);font-size:11px}
+.m-side .lg{font:600 15px var(--display);color:#fff;margin:2px 6px 14px}
+.m-side .it{padding:7px 8px;border-radius:7px;margin-bottom:2px;display:flex;gap:7px;align-items:center}
+.m-side .it.on{background:rgba(255,255,255,.1);color:#fff;box-shadow:inset 2px 0 0 var(--gold)}
+.m-side .cta{margin-top:12px;background:var(--gold);color:var(--navy-deep);border-radius:8px;padding:8px;text-align:center;font-weight:700}
+.m-main{position:absolute;left:150px;right:0;top:0;bottom:0;background:var(--paper)}
+.m-band{background:var(--navy);color:#fff;padding:16px 22px 46px}
+.m-band h3{font:600 17px var(--display);margin:0}
+.m-band .s{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px}
+.m-body{padding:0 22px;margin-top:-30px;position:relative}
+.m-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:0 10px 24px -16px rgba(0,25,102,.35)}
+.m-l{font-size:11px;font-weight:600;color:var(--ink-2);margin:10px 0 4px}
+.m-in{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12.5px;min-height:31px;background:#fff;color:var(--ink);transition:border-color .2s,box-shadow .2s}
+.m-in.focus{border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(11,42,134,.12)}
+.m-in.ta{min-height:64px;line-height:1.45}
+.caret::after{content:"";display:inline-block;width:1px;height:13px;background:var(--ink);margin-left:1px;vertical-align:-2px;animation:blink .9s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.m-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;background:var(--navy);color:#fff;transition:transform .12s,filter .2s}
+.m-btn.gold{background:var(--gold);color:var(--navy-deep)}
+.m-btn.ghost{background:#fff;color:var(--ink-2);border:1px solid var(--line)}
+.m-btn.ok{background:var(--ok)}
+.pressed{transform:scale(.95);filter:brightness(1.1)}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);transition:all .35s}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--c)}
+.fade{opacity:0;transform:translateY(8px);transition:opacity .45s,transform .45s}
+.fade.in{opacity:1;transform:none}
+.pop{opacity:0;transform:scale(.92);transition:opacity .35s,transform .35s cubic-bezier(.2,.8,.2,1.2)}
+.pop.in{opacity:1;transform:none}
+.toast{position:absolute;right:16px;bottom:16px;background:var(--navy-deep);color:#fff;border-left:3px solid var(--gold);border-radius:10px;padding:10px 14px;font-size:12px;box-shadow:0 14px 30px rgba(0,14,64,.3)}
+.phone{position:absolute;right:26px;top:22px;width:230px;height:430px;border-radius:28px;background:#0E1621;border:6px solid #1c2733;box-shadow:0 24px 50px -20px rgba(0,0,0,.5);overflow:hidden}
+.phone .ph{background:#17212B;color:#fff;font-size:12px;font-weight:600;padding:12px 12px 10px;display:flex;align-items:center;gap:8px}
+.phone .ph i{width:26px;height:26px;border-radius:50%;background:var(--navy);display:grid;place-items:center;font:600 9px var(--display);color:var(--gold-hi);font-style:normal}
+.phone .ph small{display:block;font-weight:400;color:#7f91a4;font-size:10px}
+.msgs{padding:10px;display:flex;flex-direction:column;gap:8px}
+.msg{background:#182533;color:#e6edf3;border-radius:12px 12px 12px 4px;padding:8px 10px;font-size:11px;line-height:1.45;max-width:92%}
+.msg.me{align-self:flex-end;background:#2B5278;border-radius:12px 12px 4px 12px}
+.msg .kb{margin-top:7px;background:#24384d;border-radius:7px;text-align:center;padding:6px;font-weight:600;color:#7cc1ff}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);border-radius:99px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--ink-2);background:#fff;transition:all .25s}
+.chip.on{background:var(--c,var(--navy));border-color:var(--c,var(--navy));color:#fff}
+.prog{height:4px;background:var(--line-2);border-radius:4px;overflow:hidden}
+.prog div{height:100%;width:0;background:var(--gold);transition:width .6s ease}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--ink-2);padding:6px 0;border-bottom:1px solid var(--line-2)}
+.tl li i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none;font-style:normal;background:var(--line-2);font-size:11px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.kpi{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);border-radius:11px;padding:9px 11px}
+.kpi b{display:block;font:600 22px var(--display);color:#fff}
+.kpi span{font-size:10px;color:rgba(255,255,255,.6)}
+.gantt{position:relative;margin-top:8px}
+.g-row{display:flex;align-items:center;height:30px;border-bottom:1px solid var(--line-2);font-size:11px}
+.g-row .lab{width:170px;flex:none;color:var(--ink-2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+.g-row .trk{position:relative;flex:1;height:100%}
+.g-bar{position:absolute;top:7px;height:16px;border-radius:5px;background:var(--c);transform-origin:left;transform:scaleX(0);transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.g-bar.in{transform:none}
+.g-today{position:absolute;top:0;bottom:0;width:2px;background:var(--gold);box-shadow:0 0 10px rgba(201,147,15,.6)}
+
+/* описание шага */
+.info{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px;margin:24px 0 0}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 24px}
+.panel h2{font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+.panel .k{font-size:13px;color:var(--gold);font-weight:600}
+.panel ol,.panel ul{margin:12px 0 0;padding-left:20px;color:var(--ink-2)}
+.panel li{margin:6px 0}
+.who{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.who span{background:var(--navy-soft);color:var(--navy);border-radius:8px;padding:4px 10px;font-size:12.5px;font-weight:600}
+h2.sec{font:600 24px var(--display);letter-spacing:-.02em;margin:56px 0 16px}
+.roles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.role{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+.role b{display:block;font-size:15px;margin-bottom:6px}
+.role p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.role .tag{display:inline-block;font-size:12px;font-weight:600;color:var(--gold);margin-bottom:8px}
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+details{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::after{content:"+";color:var(--gold);font-weight:700;font-size:18px;line-height:1}
+details[open] summary::after{content:"–"}
+details p{margin:10px 0 2px;color:var(--ink-2);font-size:14px}
+footer{max-width:1240px;margin:56px auto 0;padding:24px 40px 40px;color:var(--muted);font-size:13px;display:flex;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line)}
+@media (max-width:1000px){.player{grid-template-columns:1fr}.steps{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.step{min-width:200px}.info,.faq{grid-template-columns:1fr}.roles{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.hero{padding:20px 16px 100px}.hero h1{font-size:30px}.wrap{padding:0 16px}.stage-box{padding:12px;min-height:0}.roles{grid-template-columns:1fr}footer{padding:24px 16px}.step span{display:none}.step{min-width:160px}}
+@media (prefers-reduced-motion:reduce){.hero::before,.hero::after{animation:none}.cursor{transition:none}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="top"><img src="data:image/png;base64,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" alt="Central Asian University"><span class="sp"></span><a class="btn gold" href="./">Открыть систему</a></div>
+  <div class="hero-c">
+    <h1>Как работает Реестр проблем OEC</h1>
+    <div class="rule"></div>
+    <p>Operational Excellence Committee собирает проблемы подразделений, назначает ответственных и сроки и доводит каждую до решения. Ниже — весь путь проблемы за шесть шагов.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="player" id="player" aria-label="Анимированная инструкция">
+    <nav class="steps" id="steps"></nav>
+    <div class="stage-wrap">
+      <div class="stage-box" id="box"><div class="scaler" id="scaler"><div class="stage" id="stage">
+        <div class="chrome"><i></i><i></i><i></i><div class="url" id="url">oec.centralasian.uz</div></div>
+        <div class="scene" id="scene"></div>
+        <div class="cursor" id="cursor"><svg viewBox="0 0 24 24"><path d="M4 2l16 9.5-7 1.6-3.6 6.9L4 2z" fill="#fff" stroke="#0A1538" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+      </div></div></div>
+      <div class="ctrl"><button id="prev" aria-label="Предыдущий шаг">← Назад</button><button id="play" aria-label="Пауза">❚❚ Пауза</button><button id="next" aria-label="Следующий шаг">Дальше →</button><button id="replay">↻ Повторить шаг</button><span class="cap" id="cap"></span></div>
+    </div>
+  </section>
+
+  <section class="info">
+    <div class="panel" id="detail"></div>
+    <div class="panel"><div class="k">Уведомления в Telegram</div><h2>Бот @cau_pgc_bot</h2>
+      <ul><li>Админам — о новых заявках, новых пользователях и отметках о выполнении, плюс ежедневная сводка просрочек.</li><li>Ответственному — о назначении, смене статуса и дедлайна, комментариях, за 3 дня до дедлайна и при просрочке.</li><li>Заявителю — о смене статуса его заявки.</li><li>Ссылка для входа и восстановления пароля тоже приходит в бот.</li></ul></div>
+  </section>
+
+  <h2 class="sec">Кто что делает</h2>
+  <div class="roles">
+    <div class="role"><span class="tag">Сотрудник</span><b>Подаёт проблемы</b><p>Видит реестр, дашборд и таймлайн. Правит свою заявку, пока она в статусе «Новая». Комментирует и прикладывает файлы.</p></div>
+    <div class="role"><span class="tag">Ответственный</span><b>Решает проблему</b><p>Получает назначение в Telegram, пишет о ходе работы в карточке и нажимает «Сообщить о выполнении».</p></div>
+    <div class="role"><span class="tag">Администратор OEC</span><b>Управляет решением</b><p>Подтверждает новых пользователей, оценивает проблемы, назначает ответственного и срок, меняет статусы и закрывает.</p></div>
+    <div class="role"><span class="tag">Руководство</span><b>Следит за картиной</b><p>Видит всё и отдельный блок «Нужно решение ректора» на дашборде.</p></div>
+  </div>
+
+  <h2 class="sec">Частые вопросы</h2>
+  <div class="faq">
+    <details><summary>Я зарегистрировался, но ничего не вижу</summary><p>Новый аккаунт ждёт подтверждения администратором OEC. Администраторы уже получили уведомление. Пока подключите Telegram — туда придёт сообщение, когда доступ откроют.</p></details>
+    <details><summary>Забыл пароль</summary><p>На экране входа введите email и нажмите «Забыли пароль?». Ссылка для входа придёт в бот @cau_pgc_bot. После входа задайте новый пароль в Профиле.</p></details>
+    <details><summary>Почему я не могу поменять статус или дедлайн?</summary><p>Статус, ответственного и сроки меняют только администраторы OEC. Ответственный пишет о ходе работы в комментариях и нажимает «Сообщить о выполнении».</p></details>
+    <details><summary>Как найти проблему быстро?</summary><p>Нажмите Ctrl + K (⌘ + K на Mac) или «/» и начните вводить название, номер или имя ответственного.</p></details>
+    <details><summary>Можно ли выгрузить реестр в Excel?</summary><p>Да. В разделе «Реестр проблем» кнопка «Выгрузить в Excel» сохраняет оба листа — «Реестр проблем» и «Оценка OEC» — с учётом фильтров.</p></details>
+    <details><summary>Одна строка — одна проблема?</summary><p>Да. Если проблем несколько, подайте каждую отдельно: так у каждой будет свой ответственный и срок.</p></details>
+  </div>
+</main>
+<footer><span>Central Asian University · Operational Excellence Committee</span><span style="flex:1"></span><a href="./">Открыть систему</a></footer>
+
+<script>
+const STEPS = [
+  { t: 'Войдите в систему', s: 'Регистрация и подтверждение доступа', dur: 10,
+    who: ['Сотрудник', 'Администратор OEC'],
+    d: ['Откройте oec.centralasian.uz и нажмите «Зарегистрироваться».', 'Укажите ФИО, корпоративную почту @centralasian.uz и пароль.', 'Аккаунт сразу создаётся и ждёт подтверждения: администраторы OEC получают уведомление и открывают доступ.'] },
+  { t: 'Подключите Telegram', s: 'Уведомления и вход по ссылке', dur: 8,
+    who: ['Все пользователи'],
+    d: ['Откройте Профиль и нажмите «Подключить Telegram».', 'В боте @cau_pgc_bot нажмите «Start» — готово.', 'Теперь назначения, дедлайны и ссылки для входа приходят в Telegram.'] },
+  { t: 'Подайте проблему', s: 'Мастер задаёт вопрос на каждое поле', dur: 11,
+    who: ['Сотрудник'],
+    d: ['Нажмите «Подать проблему».', 'Отвечайте на вопросы по очереди: название, факты, на что влияет, последствия, срок, решение, подразделения.', 'Проверьте заявку и нажмите «Отправить в OEC». Черновик сохраняется сам.'] },
+  { t: 'Оценка OEC', s: 'Приоритет, ответственный и срок', dur: 10,
+    who: ['Администратор OEC'],
+    d: ['Администратор открывает заявку — статус меняется на «На оценке».', 'Ставит приоритет, категорию, ответственного и согласованный срок.', 'Статус сам становится «В работе», ответственный получает сообщение в Telegram.'] },
+  { t: 'Решение', s: 'Ход работы и отметка о выполнении', dur: 10,
+    who: ['Ответственный'],
+    d: ['Ответственный пишет в карточке, что сделано и что мешает.', 'Все изменения видны в ленте «Ход работы».', 'Когда готово — «Сообщить о выполнении». Администратор проверит и закроет проблему.'] },
+  { t: 'Контроль', s: 'Дашборд и таймлайн', dur: 10,
+    who: ['Администратор OEC', 'Руководство'],
+    d: ['Дашборд показывает открытые, критические и просроченные проблемы.', 'Таймлайн (диаграмма Ганта) — сроки всех проблем на одной шкале.', 'Клик по любому графику открывает реестр с нужным фильтром.'] },
+];
+
+const $ = (s, el = document) => el.querySelector(s);
+const scene = $('#scene'), cursor = $('#cursor'), stage = $('#stage');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let cur = 0, run = 0, paused = reduce, timer = null;
+
+// ---------- режиссёр ----------
+const wait = (ms, tok) => new Promise((res, rej) => { if (reduce) ms = 0; const t0 = Date.now(); const tick = () => { if (tok !== run) return rej('stop'); if (paused && !reduce) return setTimeout(tick, 120); if (Date.now() - t0 >= ms) return res(); setTimeout(tick, Math.min(40, ms)); }; tick(); });
+function posOf(el) { let x = 0, y = 0, e = el; while (e && e !== stage) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x: x + el.offsetWidth / 2, y: y + el.offsetHeight / 2 }; }
+const A = tok => ({
+  w: ms => wait(ms, tok),
+  async to(sel) { const el = typeof sel === 'string' ? $(sel, scene) : sel; const p = posOf(el); cursor.style.transform = `translate(${p.x - 4}px,${p.y - 2}px)`; await wait(750, tok); },
+  async click(sel) { await this.to(sel); const el = $(sel, scene); cursor.classList.remove('down'); void cursor.offsetWidth; cursor.classList.add('down'); el.classList.add('pressed'); await wait(160, tok); el.classList.remove('pressed'); await wait(140, tok); },
+  async type(sel, text, sp = 38) { const el = $(sel, scene); el.classList.add('focus', 'caret'); el.textContent = ''; for (const ch of text) { el.textContent += ch; await wait(sp, tok); } el.classList.remove('caret'); await wait(150, tok); el.classList.remove('focus'); },
+  show(sel) { scene.querySelectorAll(sel).forEach(e => e.classList.add('in')); },
+  set(sel, html) { $(sel, scene).innerHTML = html; },
+});
+const sideMock = on => `<div class="m-side"><div class="lg">OEC</div>${['Дашборд', 'Реестр проблем', 'Таймлайн', 'Мои задачи', 'Админ OEC', 'Профиль'].map(t => `<div class="it ${t === on ? 'on' : ''}">${t}</div>`).join('')}<div class="cta" id="m-new">＋ Подать проблему</div></div>`;
+const phone = msgs => `<div class="phone pop" id="phone"><div class="ph"><i>OEC</i><div>CAU OEC · Реестр проблем<small>бот</small></div></div><div class="msgs" id="msgs">${msgs || ''}</div></div>`;
+
+const SCENES = [
+  // 1. вход
+  { url: 'oec.centralasian.uz', html: `
+    <div style="position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr">
+      <div style="background:var(--navy);color:#fff;padding:40px;display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="font:600 30px var(--display);line-height:1.1">Реестр<br>проблем OEC</div><div class="rule"></div>
+        <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:12px">Operational Excellence Committee</div></div>
+      <div style="padding:46px 52px" id="form">
+        <div style="font-size:20px;font-weight:700">Регистрация</div><div style="font-size:12px;color:var(--muted);margin-top:3px">Для сотрудников с почтой @centralasian.uz</div>
+        <div class="m-l">ФИО</div><div class="m-in" id="f1"></div>
+        <div class="m-l">Email</div><div class="m-in" id="f2"></div>
+        <div class="m-l">Пароль</div><div class="m-in" id="f3"></div>
+        <div class="m-btn" id="go" style="width:100%;margin-top:16px;padding:10px">Зарегистрироваться</div>
+      </div>
+      <div class="fade" id="pend" style="position:absolute;right:0;top:0;bottom:0;width:50%;background:#fff;padding:60px 52px">
+        <div class="badge" style="--c:var(--gold)">Ожидает подтверждения</div>
+        <div style="font-size:20px;font-weight:700;margin-top:12px">Доступ на подтверждении</div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:6px">Администраторы OEC получили уведомление и откроют доступ.</div>
+        <div class="m-card pop" id="adm" style="margin-top:26px"><div style="font-size:11px;color:var(--muted)">Админ OEC → Пользователи</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px"><div style="flex:1"><b style="font-size:13px">Дилноза Каримова</b><div style="font-size:11px;color:var(--muted)">d.karimova@centralasian.uz</div></div><div class="m-btn gold" id="ap">Подтвердить</div></div></div>
+      </div>
+      <div class="toast pop" id="ok">✅ Доступ подтверждён — можно входить</div>
+    </div>`,
+    async go(a) { await a.w(400); await a.click('#f1'); await a.type('#f1', 'Дилноза Каримова'); await a.click('#f2'); await a.type('#f2', 'd.karimova@centralasian.uz', 30); await a.click('#f3'); await a.type('#f3', '••••••••', 60); await a.click('#go'); a.show('#pend'); await a.w(700); a.show('#adm'); await a.w(500); await a.click('#ap'); a.set('#ap', '✓ Готово'); a.show('#ok'); await a.w(1500); } },
+  // 2. telegram
+  { url: 'oec.centralasian.uz/#/profile', html: `${sideMock('Профиль')}<div class="m-main"><div class="m-band"><h3>Профиль</h3><div class="s">Уведомления и вход по ссылке</div></div>
+      <div class="m-body"><div class="m-card" style="width:330px"><div style="font-size:13px;font-weight:700">Уведомления в Telegram</div>
+        <div class="badge" id="st" style="--c:#8C95B0;margin-top:10px">Не подключено</div>
+        <div style="font-size:11.5px;color:var(--muted);margin:10px 0 12px">Назначения, сроки, комментарии и ссылки для входа.</div>
+        <div class="m-btn gold" id="tg">Подключить Telegram</div></div></div></div>${phone()}`,
+    async go(a) { await a.w(400); await a.click('#tg'); a.show('#phone'); await a.w(600);
+      a.set('#msgs', '<div class="msg me pop" id="m1">/start</div>'); await a.w(50); a.show('#m1'); await a.w(700);
+      $('#msgs', scene).insertAdjacentHTML('beforeend', '<div class="msg pop" id="m2">Готово, Дилноза! Уведомления OEC будут приходить сюда: назначения, смена статуса, дедлайны и комментарии.</div>'); await a.w(50); a.show('#m2'); await a.w(600);
+      a.set('#st', 'Подключено'); $('#st', scene).style.setProperty('--c', '#2DBE82'); await a.w(1800); } },
+  // 3. мастер
+  { url: 'oec.centralasian.uz/#/new', html: `${sideMock('')}<div class="m-main"><div class="m-band"><h3>Новая проблема</h3><div class="s">Ответьте на вопросы по очереди</div></div>
+      <div class="m-body"><div class="m-card" style="position:relative;padding-top:20px"><div class="prog" style="position:absolute;left:0;right:0;top:0;border-radius:12px 12px 0 0"><div id="pg"></div></div>
+        <div style="font-size:11px;font-weight:600;color:var(--gold)" id="k">Шаг 2 из 11. Краткое название *</div>
+        <div style="font-size:18px;font-weight:700;margin:4px 0 8px" id="q">Как назвать проблему одной строкой?</div>
+        <div class="m-in" id="ans"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:14px"><div class="m-btn ghost">Назад</div><div class="m-btn" id="nx">Далее</div></div></div></div></div>
+      <div class="toast pop" id="sent">Проблема №23 отправлена в OEC</div>`,
+    async go(a) { await a.w(300); $('#pg', scene).style.width = '10%'; await a.click('#ans'); await a.type('#ans', 'Принтеры ломаются во время сессии');
+      await a.click('#nx'); $('#pg', scene).style.width = '28%'; a.set('#k', 'Шаг 3 из 11. Описание проблемы / факты *'); a.set('#q', 'Что именно происходит?'); $('#ans', scene).classList.add('ta');
+      await a.type('#ans', 'В экзаменационный период принтеры требуют ремонта каждые несколько дней, печать билетов срывается.', 22);
+      await a.click('#nx'); for (const w of [45, 62, 78, 90]) { $('#pg', scene).style.width = w + '%'; await a.w(260); }
+      $('#pg', scene).style.width = '100%'; a.set('#k', 'Последний шаг'); a.set('#q', 'Проверьте заявку'); a.set('#ans', 'Все ответы на одном экране — можно вернуться и поправить.'); a.set('#nx', 'Отправить в OEC'); $('#nx', scene).classList.add('gold');
+      await a.w(400); await a.click('#nx'); a.show('#sent'); await a.w(1600); } },
+  // 4. оценка
+  { url: 'oec.centralasian.uz/#/p/23', html: `${sideMock('Реестр проблем')}<div class="m-main"><div class="m-band"><div style="display:flex;gap:6px;margin-bottom:6px"><span style="font:600 11px var(--display);color:var(--gold-hi)">№23</span><span class="badge" id="b" style="--c:#8A6CF0;background:rgba(255,255,255,.1);color:#fff">На оценке</span></div><h3 style="font:700 16px Onest">Принтеры ломаются во время сессии</h3><div class="s">Подал(а) Темурбек Элбоев, Examination Unit</div></div>
+      <div class="m-body" style="display:grid;grid-template-columns:1fr 280px;gap:12px"><div class="m-card" style="font-size:11.5px;color:var(--ink-2)"><b style="font-size:12px;color:var(--ink)">Заявка</b><p style="margin:8px 0">В экзаменационный период принтеры требуют ремонта каждые несколько дней, печать билетов срывается.</p><p style="margin:0;color:var(--muted)">Подразделения: АХО, Отдел закупок</p></div>
+      <div class="m-card"><div style="font-size:12px;font-weight:700;color:var(--navy)">Оценка OEC</div>
+        <div class="m-l">Приоритет</div><div class="chips"><span class="chip" id="p1" style="--c:#D23B3B">Критический</span><span class="chip" id="p2" style="--c:#E06A1B">Высокий</span><span class="chip" style="--c:#B8860B">Средний</span></div>
+        <div class="m-l">Ответственный</div><div class="m-in" id="r"></div>
+        <div class="m-l">Согласованный срок</div><div class="m-in" id="d"></div>
+        <div class="m-btn gold" id="sv" style="width:100%;margin-top:12px">Сохранить оценку</div></div></div></div>
+      ${phone()}`,
+    async go(a) { $('#phone', scene).style.cssText += 'top:auto;bottom:-470px;transition:bottom .6s;right:26px'; await a.w(400); await a.click('#p2'); $('#p2', scene).classList.add('on');
+      await a.click('#r'); await a.type('#r', 'Шерзод Каюмов, АХО', 30); await a.click('#d'); await a.type('#d', '20.11.2026', 50); await a.click('#sv');
+      a.set('#b', 'В работе'); $('#b', scene).style.setProperty('--c', '#22A3E0'); await a.w(500);
+      a.show('#phone'); $('#phone', scene).style.bottom = '20px'; $('#msgs', scene).innerHTML = '<div class="msg">👤 Вы назначены ответственным<br>№23 · Принтеры ломаются во время сессии<br>Дедлайн: 20.11.2026<br>Приоритет: Высокий<div class="kb">Открыть карточку</div></div>'; await a.w(2200); } },
+  // 5. решение
+  { url: 'oec.centralasian.uz/#/p/23', html: `${sideMock('Мои задачи')}<div class="m-main"><div class="m-band"><div style="display:flex;gap:6px;margin-bottom:6px"><span style="font:600 11px var(--display);color:var(--gold-hi)">№23</span><span class="badge" style="--c:#22A3E0;background:rgba(255,255,255,.1);color:#fff">В работе</span></div><h3 style="font:700 16px Onest">Принтеры ломаются во время сессии</h3><div class="s">Ответственный: Шерзод Каюмов · до дедлайна 10 дней</div></div>
+      <div class="m-body"><div class="m-card"><b style="font-size:12px">Ход работы</b>
+        <ul class="tl" id="tl"><li><i>🆕</i><span><b>Темурбек Элбоев</b> подал проблему</span></li><li><i>👤</i><span><b>Бобур Гафуров</b> назначил ответственного: Шерзод Каюмов</span></li></ul>
+        <div class="m-in ta" id="c" style="margin-top:10px;min-height:46px"></div>
+        <div style="display:flex;gap:8px;margin-top:10px"><div class="m-btn" id="cs">Отправить комментарий</div><div class="m-btn ok" id="dn">✅ Сообщить о выполнении</div></div></div></div></div>
+      <div class="toast pop" id="t">Администраторы уведомлены о выполнении</div>`,
+    async go(a) { await a.w(300); await a.click('#c'); await a.type('#c', 'Заказали 2 новых принтера, сервис заменил картриджи.', 26); await a.click('#cs');
+      $('#tl', scene).insertAdjacentHTML('beforeend', '<li class="fade" id="l1"><i>💬</i><span><b>Шерзод Каюмов</b>: Заказали 2 новых принтера, сервис заменил картриджи.</span></li>'); $('#c', scene).textContent = ''; await a.w(60); a.show('#l1'); await a.w(900);
+      await a.click('#dn'); $('#tl', scene).insertAdjacentHTML('beforeend', '<li class="fade" id="l2"><i>✅</i><span><b>Шерзод Каюмов</b> сообщил о выполнении</span></li>'); await a.w(60); a.show('#l2'); a.show('#t'); await a.w(1900); } },
+  // 6. контроль
+  { url: 'oec.centralasian.uz/#/dashboard', html: `${sideMock('Дашборд')}<div class="m-main"><div class="m-band" style="padding-bottom:16px"><div style="font-size:11px;color:rgba(255,255,255,.6)">Добрый день</div><div style="font:600 24px var(--display);margin:2px 0 12px"><span style="color:var(--gold-hi)" id="n">0</span> открытых проблем</div>
+        <div class="kpis"><div class="kpi"><b id="k1">0</b><span>всего в реестре</span></div><div class="kpi"><b id="k2">0</b><span>в работе</span></div><div class="kpi"><b id="k3" style="color:#FF8A8A">0</b><span>просрочено</span></div><div class="kpi"><b id="k4">0</b><span>закрыто за месяц</span></div></div></div>
+      <div style="padding:12px 22px"><div class="m-card" style="padding:10px 14px"><b style="font-size:12px">Сроки решений</b>
+        <div class="gantt" id="g">${[['№23 Принтеры ломаются', '#22A3E0', 18, 38], ['№6 Платформа HEMIS', '#E3B23C', 5, 30], ['№12 Роль в CAUApp', '#5B7CFA', 30, 45], ['№1 Marking Scale', '#22A3E0', 2, 28], ['№7 Выдача дипломов', '#8A6CF0', 22, 60]].map(([l, c, x, w]) => `<div class="g-row"><div class="lab">${l}</div><div class="trk"><div class="g-bar" style="--c:${c};left:${x}%;width:${w}%"></div></div></div>`).join('')}
+          <div class="g-today" style="left:calc(170px + 40% )"></div></div></div></div></div>`,
+    async go(a) { await a.w(300); const cnt = (sel, to) => { const el = $(sel, scene); let v = 0; const st = setInterval(() => { v++; el.textContent = v; if (v >= to) clearInterval(st); }, 900 / to); };
+      cnt('#n', 18); cnt('#k1', 22); cnt('#k2', 4); cnt('#k3', 2); cnt('#k4', 1); await a.w(600);
+      for (const b of scene.querySelectorAll('.g-bar')) { b.classList.add('in'); await a.w(160); }
+      await a.w(500); await a.to(scene.querySelectorAll('.g-bar')[0]); await a.w(2200); } },
+];
+
+// ---------- плеер ----------
+const stepsEl = $('#steps');
+stepsEl.innerHTML = STEPS.map((s, i) => `<button class="step" data-i="${i}" style="--dur:${s.dur}s"><span class="n">${i + 1}</span><span><b>${s.t}</b><span>${s.s}</span></span><span class="bar"></span></button>`).join('');
+stepsEl.addEventListener('click', e => { const b = e.target.closest('.step'); if (b) go(+b.dataset.i); });
+function renderDetail(i) { const s = STEPS[i]; $('#detail').innerHTML = `<div class="k">Шаг ${i + 1} из ${STEPS.length}</div><h2>${s.t}</h2><ol>${s.d.map(x => `<li>${x}</li>`).join('')}</ol><div class="who">${s.who.map(w => `<span>${w}</span>`).join('')}</div>`; }
+async function go(i) {
+  cur = (i + STEPS.length) % STEPS.length; const tok = ++run; clearTimeout(timer);
+  [...stepsEl.children].forEach((b, k) => { b.classList.toggle('on', k === cur); b.classList.toggle('done', k < cur); const bar = b.querySelector('.bar'); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; });
+  const sc = SCENES[cur]; $('#url').textContent = sc.url; scene.innerHTML = sc.html; cursor.style.transition = 'none'; cursor.style.transform = 'translate(700px,430px)'; void cursor.offsetWidth; cursor.style.transition = '';
+  $('#cap').textContent = `Шаг ${cur + 1} из ${STEPS.length}: ${STEPS[cur].t}`; renderDetail(cur);
+  try { await sc.go(A(tok)); if (tok === run && !reduce) await wait(400, tok); if (tok === run && !paused) go(cur + 1); } catch (e) { /* шаг прерван */ }
+}
+function setPaused(p) { paused = p; $('#player').classList.toggle('paused', p); $('#play').innerHTML = p ? '▶ Смотреть' : '❚❚ Пауза'; if (!p && reduce) go(cur + 1); }
+$('#play').addEventListener('click', () => setPaused(!paused));
+$('#next').addEventListener('click', () => go(cur + 1));
+$('#prev').addEventListener('click', () => go(cur - 1));
+$('#replay').addEventListener('click', () => go(cur));
+document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') go(cur + 1); if (e.key === 'ArrowLeft') go(cur - 1); if (e.key === ' ' && e.target === document.body) { e.preventDefault(); setPaused(!paused); } });
+function fit() { const box = $('#box'), w = box.clientWidth - 24, s = Math.min(1, w / 860); $('#scaler').style.transform = `scale(${s})`; $('#scaler').style.margin = `${(540 * s - 540) / 2}px ${(860 * s - 860) / 2}px`; }
+addEventListener('resize', fit); fit();
+setPaused(paused); go(0);
+</script>
+</body>
+</html>
