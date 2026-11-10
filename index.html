@@ -412,7 +412,7 @@ const ENUM = {
 };
 const STATUS_C = {'Новая':'#5B7CFA','На оценке':'#8A6CF0','В работе':'#22A3E0','Ожидает решения':'#E3B23C','Заблокирована':'#E25555','Выполнена':'#2DBE82','Закрыта':'#8C95B0'};
 const PRIO_C = {'Критический':'#D23B3B','Высокий':'#E06A1B','Средний':'#B8860B','Низкий':'#2E9E6B'};
-const ROLE_L = {admin:'Администратор', leadership:'Руководство', member:'Сотрудник'};
+const ROLE_L = {admin:'Администратор', leadership:'Руководство', member:'Сотрудник', pending:'Ожидает подтверждения'};
 const CLOSED = ['Выполнена','Закрыта'];
 const isOpen = p => !CLOSED.includes(p.status);
 
@@ -472,6 +472,12 @@ function SupaAPI() {
     async signIn(email, password) { ok(await sb.auth.signInWithPassword({ email, password })); },
     async signUp(email, password, full_name) { return ok(await sb.auth.signUp({ email, password, options: { data: { full_name }, emailRedirectTo: redirect } })); },
     async magic(email) { ok(await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect } })); },
+    async resetPassword(email) { ok(await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect })); },
+    async setPassword(password) { ok(await sb.auth.updateUser({ password })); },
+    async tgLogin(email) {
+      const r = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/tg-login', { method: 'POST', headers: { 'content-type': 'application/json', apikey: CONFIG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CONFIG.SUPABASE_ANON_KEY }, body: JSON.stringify({ email }) });
+      const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Не удалось отправить ссылку');
+    },
     async signOut() { await sb.auth.signOut(); },
     async me() { const { data: { user } } = await sb.auth.getUser(); return ok(await sb.from('profiles').select('*').eq('id', user.id).single()); },
     async profiles() { return ok(await sb.from('profiles').select('*').order('full_name')); },
@@ -505,7 +511,7 @@ function DemoAPI() {
   const plus = n => { const d = new Date(); d.setDate(d.getDate() + n); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
   const P = [
     { id: 'u-bobur', email: 'b.gafurov@centralasian.uz', full_name: 'Бобур Гафуров', position: 'Координатор PGC', department: 'Ректорат', role: 'admin', tg_connected: true },
-    { id: 'u-amal', email: 'amal@egox.tech', full_name: 'Амаль Баширов', position: 'Product Manager', department: 'CAU App', role: 'admin', tg_connected: true },
+    { id: 'u-amal', email: 'a.bashirov@centralasian.uz', full_name: 'Амаль Баширов', position: 'Product Manager', department: 'CAU App', role: 'admin', tg_connected: true },
     { id: 'u-moh', email: 'mohchehra@centralasian.uz', full_name: 'Мохчехра', position: 'Академический отдел', department: 'Академический отдел / Quality Assurance', role: 'member', tg_connected: false },
     { id: 'u-reg', email: 'registrar@centralasian.uz', full_name: 'Офис регистратора', position: 'Регистратор', department: 'Офис регистратора', role: 'member', tg_connected: false },
   ];
@@ -571,7 +577,7 @@ function DemoAPI() {
   return {
     demoUsers: P, setDemoUser(id) { me = id; ls.set('pgc_demo_user', id); },
     async session() { return { user: { id: me } }; }, onAuth() {},
-    async signIn() {}, async signUp() {}, async magic() {}, async signOut() { toast('В демо-режиме выход недоступен'); },
+    async signIn() {}, async signUp() {}, async magic() {}, async resetPassword() {}, async setPassword() {}, async tgLogin() {}, async signOut() { toast('В демо-режиме выход недоступен'); },
     async me() { return clone(meP()); },
     async profiles() { return clone(P); },
     async problems() { return probs.map(view).sort((a, b) => b.id - a.id); },
@@ -666,7 +672,7 @@ function bindGo(el) { $$('[data-go]', el).forEach(x => x.addEventListener('click
    ===================================================================== */
 function shell(active, title, sub, actions, body, o = {}) {
   const myOpen = S.problems.filter(p => p.responsible_id === S.me.id && isOpen(p)).length;
-  const queue = S.problems.filter(p => ['Новая', 'На оценке'].includes(p.status)).length;
+  const queue = S.problems.filter(p => ['Новая', 'На оценке'].includes(p.status)).length + S.profiles.filter(p => p.role === 'pending').length;
   const nav = [
     ['dashboard', 'Дашборд', ICON.dash], ['registry', 'Реестр проблем', ICON.list], ['timeline', 'Таймлайн', ICON.gantt],
     ['my', 'Мои задачи', ICON.me, myOpen], ...(isAdmin() ? [['admin', 'Админ PGC', ICON.admin, queue]] : []), ['profile', 'Профиль', ICON.user],
@@ -1236,9 +1242,9 @@ function viewAdmin(tab = 'queue') {
       </tbody></table>${q.length ? '' : '<div class="empty">Очередь пуста — все проблемы оценены и назначены 🎉</div>'}</div>`;
   } else if (tab === 'users') {
     body += `<div class="card table-wrap"><table class="t"><thead><tr><th>Пользователь</th><th>Должность</th><th>Подразделение</th><th>Telegram</th><th style="min-width:170px">Роль</th></tr></thead><tbody>
-      ${S.profiles.map(u => `<tr style="cursor:default"><td><div class="ttl">${h(u.full_name || '—')}</div><div class="sub">${h(u.email)}</div></td><td>${h(u.position)}</td><td>${h(u.department)}</td><td>${u.tg_connected ? '<span class="badge" style="--c:#059669">подключён</span>' : '<span class="muted small">нет</span>'}</td>
-        <td><select class="select" data-role="${u.id}" ${u.id === S.me.id ? 'disabled' : ''}>${Object.entries(ROLE_L).map(([k, v]) => `<option value="${k}" ${u.role === k ? 'selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('')}
-      </tbody></table></div><div class="muted small" style="margin-top:10px">Новые сотрудники появляются здесь после первого входа. Администраторы назначают ответственных и меняют статусы и дедлайны; «Руководство» — просмотр всего.</div>`;
+      ${S.profiles.slice().sort((a, b) => (b.role === 'pending') - (a.role === 'pending')).map(u => `<tr style="cursor:default;${u.role === 'pending' ? 'background:var(--gold-soft)' : ''}"><td><div class="ttl">${h(u.full_name || '—')}</div><div class="sub">${h(u.email)}</div></td><td>${h(u.position)}</td><td>${h(u.department)}</td><td>${u.tg_connected ? '<span class="badge" style="--c:#059669">подключён</span>' : '<span class="muted small">нет</span>'}</td>
+        <td style="display:flex;gap:8px;align-items:center">${u.role === 'pending' ? `<button class="btn gold sm" data-approve="${u.id}">Подтвердить</button>` : ''}<select class="select" data-role="${u.id}" ${u.id === S.me.id ? 'disabled' : ''}>${Object.entries(ROLE_L).map(([k, v]) => `<option value="${k}" ${u.role === k ? 'selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('')}
+      </tbody></table></div><div class="muted small" style="margin-top:10px">Новые сотрудники появляются здесь сразу после регистрации со статусом «Ожидает подтверждения» — до подтверждения они не видят данных. Администраторы назначают ответственных и меняют статусы и дедлайны; «Руководство» — просмотр всего.</div>`;
   } else if (tab === 'questions') {
     body += `<div class="callout">Тексты вопросов, подсказок и примеров, которые видит сотрудник в мастере подачи. Поля реестра не меняются — только формулировки.</div>
       ${S.questions.map(q => `<div class="card" style="margin-bottom:12px" data-q="${q.field_key}"><div class="card-h"><h3>${q.sort}. ${h(q.label)}</h3><span class="muted">${q.kind}</span></div><div class="card-b">
@@ -1256,6 +1262,7 @@ function viewAdmin(tab = 'queue') {
     const tr = b.closest('tr'), g = n => tr.querySelector(`[name="${n}"]`).value;
     try { await api.update(+b.dataset.save, { priority: g('priority') || null, responsible_id: g('responsible_id') || null, agreed_deadline: g('agreed_deadline') || null }); await reloadProblems(); toast('Сохранено'); viewAdmin('queue'); } catch (e) { toast(errMsg(e), true); }
   }));
+  $$('[data-approve]').forEach(b => b.addEventListener('click', async () => { try { await api.updateProfile(b.dataset.approve, { role: 'member' }); S.profiles = await api.profiles(); toast('Доступ подтверждён'); viewAdmin('users'); } catch (e) { toast(errMsg(e), true); } }));
   $$('[data-role]').forEach(s => s.addEventListener('change', async () => { try { await api.updateProfile(s.dataset.role, { role: s.value }); S.profiles = await api.profiles(); toast('Роль обновлена'); } catch (e) { toast(errMsg(e), true); } }));
   $$('[data-qsave]').forEach(b => b.addEventListener('click', async () => {
     const c = b.closest('[data-q]'), g = n => c.querySelector(`[name="${n}"]`);
@@ -1278,13 +1285,16 @@ async function viewProfile() {
       <div class="field"><label>Должность</label><input class="input" id="ppos" value="${h(m.position)}"></div>
       <div class="field"><label>Подразделение</label><input class="input" id="pdep" list="pdl" value="${h(m.department)}"><datalist id="pdl">${S.departments.map(d => `<option value="${h(d.name)}">`).join('')}</datalist></div>
       <div class="field"><label>Роль</label><input class="input" value="${ROLE_L[m.role]}" disabled></div>
-      <button class="btn primary" id="psave">Сохранить</button></div></div>
+      <button class="btn primary" id="psave">Сохранить</button>
+      <div style="border-top:1px solid var(--line-2);margin-top:20px;padding-top:18px"><div class="field"><label>Новый пароль</label><input class="input" id="pnew" type="password" autocomplete="new-password" placeholder="Не короче 6 символов"></div>
+      <button class="btn" id="ppass">Сменить пароль</button></div></div></div>
     <div class="card"><div class="card-h"><h3>Уведомления в Telegram</h3></div><div class="card-b">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:28px">✈️</span><div>${m.tg_connected ? '<span class="badge" style="--c:#059669">Подключено</span>' : '<span class="badge" style="--c:#94A3B8">Не подключено</span>'}</div></div>
       <div class="muted" style="margin-bottom:14px">Бот пришлёт: назначение вас ответственным, смену статуса и дедлайна, комментарии, напоминание за 3 дня до дедлайна и о просрочке.${m.role === 'admin' ? ' Администраторам — новые заявки, отметки о выполнении и ежедневная сводка просрочек.' : ''}</div>
       ${tgLink ? `<a class="btn primary" href="${tgLink}" target="_blank" rel="noopener">${m.tg_connected ? 'Переподключить Telegram' : 'Подключить Telegram'}</a><div class="muted small" style="margin-top:8px">Откроется бот — нажмите «Start». Затем обновите эту страницу.</div>` : `<div class="muted small">Бот ещё не настроен (CONFIG.TG_BOT_USERNAME).</div>`}
     </div></div></div>`;
   mount(shell('profile', 'Профиль', '', '', body));
+  $('#ppass').addEventListener('click', async () => { const v = $('#pnew').value; if (v.length < 6) return toast('Пароль должен быть не короче 6 символов', true); try { await api.setPassword(v); $('#pnew').value = ''; toast('Пароль изменён'); } catch (e) { toast(errMsg(e), true); } });
   $('#psave').addEventListener('click', async () => {
     const patch = { full_name: $('#pfn').value.trim(), position: $('#ppos').value.trim(), department: $('#pdep').value.trim() };
     if (!patch.full_name) return toast('Укажите ФИО', true);
@@ -1307,9 +1317,9 @@ function viewAuth(mode = 'in') {
       <h2>${mode === 'in' ? 'Вход' : 'Регистрация'}</h2><div class="muted" style="margin:6px 0 24px">${mode === 'in' ? 'Войдите корпоративной почтой' : 'Для сотрудников с почтой @centralasian.uz'}</div>
       ${mode === 'up' ? '<div class="field"><label>ФИО</label><input class="input" id="aname" placeholder="Фамилия Имя"></div>' : ''}
       <div class="field"><label>Email</label><input class="input" id="aemail" type="email" placeholder="name@centralasian.uz" autocomplete="email"></div>
-      <div class="field"><label>Пароль</label><input class="input" id="apass" type="password" autocomplete="${mode === 'in' ? 'current-password' : 'new-password'}"></div>
+      <div class="field"><label style="display:flex;justify-content:space-between">Пароль${mode === 'in' ? '<a href="javascript:void 0" id="aforgot" style="font-weight:500">Забыли пароль?</a>' : ''}</label><input class="input" id="apass" type="password" autocomplete="${mode === 'in' ? 'current-password' : 'new-password'}"></div>
       <button class="btn primary" id="ago" style="width:100%;justify-content:center;padding:13px;margin-top:4px">${mode === 'in' ? 'Войти' : 'Зарегистрироваться'}</button>
-      ${mode === 'in' ? '<button class="btn" id="amagic" style="width:100%;justify-content:center;margin-top:10px;padding:12px">Получить ссылку для входа на почту</button>' : ''}
+      ${mode === 'in' ? `<button class="btn" id="amagic" style="width:100%;justify-content:center;margin-top:10px;padding:12px">Войти по ссылке в Telegram</button><div class="muted small" style="margin-top:8px;text-align:center">Ссылка придёт в бот @${h(CONFIG.TG_BOT_USERNAME || 'cau_pgc_bot')}, если он подключён в вашем профиле</div>` : '<div class="muted small" style="margin-top:-4px;margin-bottom:12px">После регистрации администратор PGC подтвердит ваш доступ.</div>'}
       <div style="text-align:center;margin-top:22px" class="muted">${mode === 'in' ? 'Нет аккаунта? <a href="javascript:void 0" id="asw">Зарегистрироваться</a>' : 'Уже есть аккаунт? <a href="javascript:void 0" id="asw">Войти</a>'}</div>
     </div></div></div>`;
   $('#asw').addEventListener('click', () => viewAuth(mode === 'in' ? 'up' : 'in'));
@@ -1318,12 +1328,49 @@ function viewAuth(mode = 'in') {
     if (!email || !pass) return toast('Введите email и пароль', true);
     try {
       if (mode === 'in') { await api.signIn(email, pass); boot(); }
-      else { const name = $('#aname').value.trim(); if (!name) return toast('Укажите ФИО', true); const r = await api.signUp(email, pass, name); if (r.session) boot(); else { toast('Письмо для подтверждения отправлено на ' + email); viewAuth('in'); } }
+      else { const name = $('#aname').value.trim(); if (!name) return toast('Укажите ФИО', true); const r = await api.signUp(email, pass, name); if (r.session) boot(); else { toast('Аккаунт создан. Войдите с вашим паролем.'); viewAuth('in'); } }
     } catch (e) { toast(errMsg(e), true); }
   };
   $('#ago').addEventListener('click', go);
   $$('.auth .input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
-  $('#amagic')?.addEventListener('click', async () => { const email = $('#aemail').value.trim().toLowerCase(); if (!email) return toast('Введите email', true); try { await api.magic(email); toast('Ссылка для входа отправлена на ' + email); } catch (e) { toast(errMsg(e), true); } });
+  const tgSend = async (forgot) => { const email = $('#aemail').value.trim().toLowerCase(); if (!email) return toast('Введите email аккаунта', true); try { await api.tgLogin(email); toast(forgot ? 'Если Telegram подключён, ссылка для входа уже в боте. После входа задайте новый пароль в Профиле.' : 'Если Telegram подключён, ссылка для входа уже в боте @' + (CONFIG.TG_BOT_USERNAME || 'cau_pgc_bot')); } catch (e) { toast(errMsg(e), true); } };
+  $('#aforgot')?.addEventListener('click', () => tgSend(true));
+  $('#amagic')?.addEventListener('click', () => tgSend(false));
+}
+
+function viewSetPassword() {
+  $('#root').innerHTML = `<div class="auth">
+    <div class="auth-l band glow"><div class="ring"></div><div class="ring r2"></div><img src="${LOGO}" alt="Central Asian University"><h1>Новый пароль</h1><div class="rule"></div><p>Придумайте новый пароль для входа в Реестр проблем PGC.</p></div>
+    <div class="auth-r"><div class="auth-f"><h2>Смена пароля</h2><div class="muted" style="margin:6px 0 24px">Не короче 6 символов</div>
+      <div class="field"><label>Новый пароль</label><input class="input" id="np1" type="password" autocomplete="new-password"></div>
+      <div class="field"><label>Повторите пароль</label><input class="input" id="np2" type="password" autocomplete="new-password"></div>
+      <button class="btn primary" id="npSave" style="width:100%;justify-content:center;padding:13px">Сохранить пароль</button></div></div></div>`;
+  $('#npSave').addEventListener('click', async () => {
+    const a = $('#np1').value, b = $('#np2').value;
+    if (a.length < 6) return toast('Пароль должен быть не короче 6 символов', true);
+    if (a !== b) return toast('Пароли не совпадают', true);
+    try { await api.setPassword(a); toast('Пароль сохранён'); history.replaceState(null, '', location.pathname + '#/dashboard'); S.me = null; boot(); } catch (e) { toast(errMsg(e), true); }
+  });
+}
+
+async function viewPending() {
+  const m = S.me;
+  const tgLink = CONFIG.TG_BOT_USERNAME ? `https://t.me/${CONFIG.TG_BOT_USERNAME}?start=${await api.tgToken().catch(() => '')}` : '';
+  $('#root').innerHTML = `<div class="auth">
+    <div class="auth-l band glow"><div class="ring"></div><div class="ring r2"></div><img src="${LOGO}" alt="Central Asian University"><h1>Доступ на подтверждении</h1><div class="rule"></div>
+      <p>Администраторы PGC получили уведомление и подтвердят ваш доступ. Пока заполните профиль и подключите Telegram: туда придёт сообщение о подтверждении и ссылки для входа.</p></div>
+    <div class="auth-r"><div class="auth-f">
+      <h2>${h(m.full_name || 'Ваш профиль')}</h2><div class="muted" style="margin:6px 0 20px">${h(m.email)}</div>
+      <div class="field"><label>ФИО</label><input class="input" id="pfn" value="${h(m.full_name)}" placeholder="Фамилия Имя"></div>
+      <div class="field"><label>Должность</label><input class="input" id="ppos" value="${h(m.position)}"></div>
+      <div class="field"><label>Подразделение</label><input class="input" id="pdep" value="${h(m.department)}"></div>
+      <button class="btn primary" id="psave" style="width:100%;justify-content:center;padding:12px">Сохранить профиль</button>
+      ${tgLink ? `<a class="btn gold" href="${tgLink}" target="_blank" rel="noopener" style="width:100%;justify-content:center;padding:12px;margin-top:10px">${m.tg_connected ? 'Telegram подключён — переподключить' : 'Подключить Telegram'}</a>` : ''}
+      <div style="display:flex;gap:8px;margin-top:18px"><button class="btn" id="pcheck" style="flex:1;justify-content:center">Проверить доступ</button><button class="btn ghost" id="pout">Выйти</button></div>
+    </div></div></div>`;
+  $('#psave').addEventListener('click', async () => { const patch = { full_name: $('#pfn').value.trim(), position: $('#ppos').value.trim(), department: $('#pdep').value.trim() }; if (!patch.full_name) return toast('Укажите ФИО', true); try { await api.updateProfile(m.id, patch); S.me = await api.me(); toast('Профиль сохранён'); } catch (e) { toast(errMsg(e), true); } });
+  $('#pcheck').addEventListener('click', async () => { S.me = await api.me(); if (S.me.role === 'pending') toast('Доступ ещё не подтверждён'); else { await loadAll(); route(); } });
+  $('#pout').addEventListener('click', async () => { await api.signOut(); location.reload(); });
 }
 
 /* =====================================================================
@@ -1331,6 +1378,7 @@ function viewAuth(mode = 'in') {
    ===================================================================== */
 async function route() {
   if (!S.me) return;
+  if (S.me.role === 'pending') return viewPending();
   const [, name = 'dashboard', arg] = (location.hash || '#/dashboard').split('/');
   if (!S.me.full_name && name !== 'profile' && name !== 'new') { location.hash = '#/profile'; return; }
   window.scrollTo(0, 0);
@@ -1356,13 +1404,15 @@ async function boot() {
   try {
     const session = await api.session();
     if (!session) return viewAuth('in');
+    if (recovering) return viewSetPassword();
     await loadAll();
     route();
   } catch (e) { console.error(e); toast(errMsg(e), true); viewAuth('in'); }
   finally { booting = false; }
 }
-window.addEventListener('hashchange', route);
-api.onAuth(ev => { if (ev === 'SIGNED_OUT') { S.me = null; viewAuth('in'); } if (ev === 'SIGNED_IN' && !S.me) boot(); });
+window.addEventListener('hashchange', () => { if (!recovering) route(); });
+let recovering = /type=recovery/.test(location.hash);
+api.onAuth(ev => { if (ev === 'PASSWORD_RECOVERY') { recovering = true; viewSetPassword(); return; } if (recovering) return; if (ev === 'SIGNED_OUT') { S.me = null; viewAuth('in'); } if (ev === 'SIGNED_IN' && !S.me) boot(); });
 boot();
 </script>
 </body>
