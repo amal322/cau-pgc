@@ -649,6 +649,41 @@ tr[draggable]:hover .grip{opacity:1}tr.dragging{opacity:.4}
 .rb-row:has(.rb-lbl){grid-template-columns:64px 140px minmax(0,1fr) 170px 90px 96px auto}
 .tpc .rbp-s{align-items:flex-start;padding:5px 8px}
 @media (max-width:700px){.tpc-grid{grid-template-columns:1fr}}
+
+/* ---------- Регламенты ---------- */
+.rg{display:grid;grid-template-columns:270px minmax(0,1fr);gap:22px;align-items:start}
+.rg-toc{position:sticky;top:16px;display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 40px);overflow:auto;padding:4px}
+.rg-toc a{display:flex;gap:10px;align-items:baseline;padding:7px 10px;border-radius:9px;color:var(--ink-2);font-size:13.5px;cursor:pointer;line-height:1.35}
+.rg-toc a:hover{background:#fff;text-decoration:none;color:var(--navy)}
+.rg-toc a span{font-weight:700;color:var(--gold);min-width:22px;font-size:12.5px}
+.rg-toc .rg-tc{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:12px 10px 4px}
+.rg-toc .input{margin-bottom:6px}
+.rg-doc{padding:36px 44px 40px;max-width:980px}
+.rg-doc-h{display:flex;gap:18px;align-items:center;padding-bottom:20px;margin-bottom:12px;border-bottom:3px solid var(--navy)}
+.rg-doc-h img{width:72px;height:auto;border-radius:6px;background:var(--navy)}
+.rg-doc-h h2{font-family:var(--display);font-size:20px;line-height:1.3;margin:4px 0;color:var(--navy)}
+.rg-sec{padding:18px 0 6px;scroll-margin-top:20px;animation:fcIn .4s ease both}
+.rg-sec h3{font-size:16.5px;color:var(--navy);margin:0 0 10px;display:flex;gap:8px}.rg-sec h3 span{color:var(--gold)}
+.rg-sec ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.rg-sec li{display:grid;grid-template-columns:44px 1fr;gap:6px;line-height:1.6;font-size:14.5px}
+.rg-cl{color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px;padding-top:2px}
+.rg-intro{font-size:14.5px;line-height:1.6;color:var(--ink-2);margin:16px 0 4px}
+.rg-cat{font-family:var(--display);font-size:17px;color:var(--navy);margin:30px 0 8px;padding-top:14px;border-top:1px solid var(--line)}
+.rg-proc{border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0;scroll-margin-top:20px;break-inside:avoid}
+.rg-ph{display:flex;gap:12px;align-items:center;margin-bottom:10px}.rg-ph h3{margin:0;font-size:16px;color:var(--ink)}
+.rg-code{font-family:var(--display);font-size:11.5px;font-weight:700;background:var(--navy);color:#fff;border-radius:7px;padding:4px 8px;white-space:nowrap}
+.rg-kv{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;margin:0 0 12px;font-size:13.5px}.rg-kv dt{color:var(--muted)}.rg-kv dd{margin:0}
+.rg-t{font-size:13px}.rg-t td{vertical-align:top}.rg-t tr{cursor:default}
+.rg-n{border-radius:0!important;font-weight:800;color:var(--navy);font-size:15px;text-align:center;width:70px;background:var(--surface-2)}
+.rg-res{margin:12px 0 6px;font-size:13.5px;background:#E9F7F0;border-radius:9px;padding:9px 12px}
+.rg-notes{margin:6px 0 0;padding-left:18px;font-size:12.8px;color:var(--ink-2)}
+.dcard-head{font-size:12px;color:var(--ink-2);margin-top:-2px}
+@media (max-width:1000px){.rg{grid-template-columns:1fr}.rg-toc{position:static;max-height:none}.rg-doc{padding:22px}}
+@media print{
+  .side,.demo-bar,.band .actions,.tabs,.rg-toc,#rg_print,.toast{display:none!important}
+  .app,.rg{display:block!important}.band{background:none!important;color:#000!important;padding:0!important}.band *{color:#000!important}
+  .rg-doc{box-shadow:none!important;border:0!important;max-width:none;padding:0}.rg-proc{page-break-inside:avoid}.rg-sec{animation:none}
+}
 </style>
 </head>
 <body>
@@ -934,6 +969,7 @@ const ICON = {
   gantt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4v16h18"/><path d="M7 8h7M10 12h8M7 16h5"/></svg>',
   search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
   side: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21a2 2 0 0 1 2-2h13v2H6M9 7h6M9 11h6"/></svg>',
   doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>',
   appr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><path d="M15.5 4.5l4 4L9 19H5v-4z"/></svg>',
   ctrl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></svg>',
@@ -1049,7 +1085,7 @@ function DemoAPI() {
     ['contacts', 8, 'Контактные лица / участники', 'Кого нужно привлечь и в какой роли?', 'ФИО и роль каждого участника.', 'Регистратор — данные студентов; финансовый отдел — расчёт контрактов', 'textarea', false],
     ['materials', 9, 'Материалы / ссылка', 'Есть ли документы, таблицы или скриншоты?', 'Вставьте ссылки и/или прикрепите файлы.', 'https://docs.google.com/...', 'files', false],
   ].map(([field_key, sort, label, question, hint, example, kind, required]) => ({ field_key, sort, label, question, hint, example, kind, required }));
-  let depts = ['CAU App', 'Офис регистратора', 'Medical School', 'Финансовый отдел / бухгалтерия', 'Отдел контрактов', 'Академический отдел / Quality Assurance', 'ИТ', 'HR', 'Приёмная комиссия', 'Студенческий офис', 'Ректорат', 'Юридический отдел'].map((name, i) => ({ id: i + 1, name, code: ['APP','REG','MED','FIN','CTR','ACA','ITD','HRD','ADM','STU','REC','LEG'][i] }));
+  let depts = ['CAU App', 'Офис регистратора', 'Medical School', 'Финансовый отдел / бухгалтерия', 'Отдел контрактов', 'Академический отдел / Quality Assurance', 'ИТ', 'HR', 'Приёмная комиссия', 'Студенческий офис', 'Ректорат', 'Юридический отдел', 'Research'].map((name, i) => ({ id: i + 1, name, code: ['APP','REG','MED','FIN','CTR','ACA','ITD','HRD','ADM','STU','REC','LEG','RES'][i], head_id: { 'Ректорат': 'u-bobur', 'Research': 'u-amal', 'Юридический отдел': 'u-reg' }[name] || null }));
   let me = ls.get('pgc_demo_user', 'u-amal');
   const meP = () => P.find(p => p.id === me);
   const name = id => P.find(p => p.id === id)?.full_name || null;
@@ -1173,6 +1209,7 @@ function DocSupaAPI(sb) {
     async saveTemplate(t) { const row = { name: t.name, name_ru: t.name_ru || '', category: t.category || 'admin', description_en: t.description_en || '', description_ru: t.description_ru || '', type_id: t.type_id, steps: t.steps, seeded: false };
       if (t.id) ok(await sb.from('route_templates').update(row).eq('id', t.id)); else ok(await sb.from('route_templates').insert(row)); },
     async saveDeptCode(id, code) { ok(await sb.from('departments').update({ code }).eq('id', id)); },
+    async saveDept(id, patch) { const d = ok(await sb.from('departments').update(patch).eq('id', id).select()); if (!d.length) throw new Error(L('No rights to edit departments', 'Нет прав на изменение отделов')); },
     async setController(id, v) { ok(await sb.from('profiles').update({ is_doc_controller: v }).eq('id', id)); },
     async docStats() {
       const [docs, steps, routes] = await Promise.all([self.docs(), sb.from('approval_steps').select('id,route_id,role,state,assignee_id,activated_at,decided_at,due_at').then(ok), sb.from('approval_routes').select('id,document_id,status,created_at,completed_at').then(ok)]);
@@ -1263,7 +1300,7 @@ function DocDemoAPI(base) {
     async approvalsBundle() { const mySteps = steps.filter(s => s.assignee_id === me()), myRoutes = routes.filter(r => r.created_by === me()); return { mySteps, myRoutes, routeSteps: steps.filter(s => myRoutes.some(r => r.id === s.route_id)), routes: Object.fromEntries(routes.map(r => [r.id, r])), docs: Object.fromEntries(docs.map(d => [d.id, d])) }; },
     async sheetBundle(rid) { const r = routes.find(x => x.id === +rid), d = docs.find(x => x.id === r.document_id); return { route: r, doc: view(d), steps: steps.filter(s => s.route_id === r.id), version: versions.find(v => v.document_id === d.id && v.version === r.version), round: routes.filter(x => x.document_id === d.id && x.id <= r.id).length }; },
     async allRequests() { return reqs.slice().sort((a, b) => b.id - a.id); }, async saveDocType(id, p) { Object.assign(types.find(t => t.id === id), p); },
-    async saveTemplate(t) { if (t.id) Object.assign(tpls.find(x => x.id === t.id), t); else tpls.push({ ...t, id: tpls.length + 1 }); }, async saveDeptCode(id, code) { const dp = S.departments.find(x => x.id === id); if (dp) dp.code = code; },
+    async saveTemplate(t) { if (t.id) Object.assign(tpls.find(x => x.id === t.id), t); else tpls.push({ ...t, id: tpls.length + 1 }); }, async saveDeptCode(id, code) { const dp = S.departments.find(x => x.id === id); if (dp) dp.code = code; }, async saveDept(id, p) { Object.assign(S.departments.find(x => x.id === id), p); },
     async setController(id, v) { const p = S.profiles.find(x => x.id === id); if (p) p.is_doc_controller = v; },
     async docStats() { return { docs: docs.map(view), steps: steps.slice(), routes: routes.slice() }; },
     async docCounts() { return { myPending: steps.filter(s => s.assignee_id === me() && s.state === 'pending').length, pendingCR: isCtrl() ? reqs.filter(r => r.status === 'pending').length : 0 }; },
@@ -1342,7 +1379,7 @@ function shell(active, title, sub, actions, body, o = {}) {
   const myOpen = S.problems.filter(p => p.responsible_id === S.me.id && isOpen(p)).length;
   const queue = S.problems.filter(p => ['Новая', 'На оценке'].includes(p.status)).length + S.profiles.filter(p => p.role === 'pending').length;
   const nav = [
-    ['dashboard', 'Дашборд', ICON.dash], ['registry', 'Перечень зон развития', ICON.list], ['timeline', 'Таймлайн', ICON.gantt], ['documents', L('Document Register', 'Реестр документов'), ICON.doc], ['approvals', L('Approvals', 'Согласования'), ICON.appr, S.myPending], ...(isCtrl() ? [['control', L('Document control', 'Контроль документов'), ICON.ctrl, S.pendingCR]] : []),
+    ['dashboard', 'Дашборд', ICON.dash], ['registry', 'Перечень зон развития', ICON.list], ['timeline', 'Таймлайн', ICON.gantt], ['documents', L('Document Register', 'Реестр документов'), ICON.doc], ['approvals', L('Approvals', 'Согласования'), ICON.appr, S.myPending], ['regs', L('Regulations', 'Регламенты'), ICON.book], ...(isCtrl() ? [['control', L('Document control', 'Контроль документов'), ICON.ctrl, S.pendingCR]] : []),
     ['my', 'Мои задачи', ICON.me, myOpen], ...(isAdmin() ? [['admin', 'Админ OEC', ICON.admin, queue]] : []), ['profile', 'Профиль', ICON.user],
   ];
   const demo = DEMO ? `<div class="demo-bar"><b>Демо-режим.</b> Данные живут только в этой вкладке. Смотреть как
@@ -2197,7 +2234,9 @@ function renderDocuments() {
 /* =====================================================================
    Папки: отдел → папки → подпапки
    ===================================================================== */
-const canFolders = dept => isCtrl() || (S.me.department && S.me.department === dept);
+const headOf = dept => (S.departments || []).find(x => x.name === dept)?.head_id || null;
+const isHeadLbl = s => s.label_en === 'Head of department' || s.label_ru === 'Руководитель отдела';
+const canFolders = dept => isCtrl() || (S.me.department && S.me.department === dept) || headOf(dept) === S.me.id;
 const canMoveDoc = d => canEditDoc(d) || canFolders(d.department);
 const FERR = { 'The folder contains documents — move them first': 'В папке есть документы — сначала переместите их', 'The folder contains subfolders — remove them first': 'В папке есть подпапки — сначала удалите их', 'Maximum folder depth is 5': 'Максимальная вложенность — 5 уровней', 'The folder belongs to another department': 'Папка относится к другому отделу', 'No rights to move this document': 'Нет прав на перемещение этого документа' };
 const fErr = e => { let m = errMsg(e); if (/doc_folders_uniq|duplicate key/.test(m)) m = L('A folder with this name already exists here', 'Папка с таким названием здесь уже есть'); else if (/row-level security/.test(m)) m = L('Only members of this department and Document Controllers can manage its folders', 'Папками отдела управляют сотрудники этого отдела и Document Controller'); else if (window.LANG === 'ru' && FERR[m]) m = FERR[m]; return m; };
@@ -2242,7 +2281,7 @@ function folderView(rows) {
     const card = dept => { const ds = rows.filter(d => d.department === dept), nf = (S.folders || []).filter(x => x.department === dept).length, code = (S.departments || []).find(x => x.name === dept)?.code || 'GEN';
       const seg = k => ds.filter(d => d.live_status === k).length, tot = ds.length || 1;
       return `<button class="dcard" data-fsel="${h(dept)}|" data-fdrop="${h(dept)}|"><div class="dcard-h"><span class="dcode">${h(code)}</span>${dept === S.me.department ? `<span class="ft-me">${L('my department', 'мой отдел')}</span>` : ''}</div>
-        <div class="dcard-t">${h(dept)}</div><div class="dcard-n"><b>${ds.length}</b> ${L('docs', 'док.')} · <b>${nf}</b> ${L('folders', 'папок')}</div>
+        <div class="dcard-t">${h(dept)}</div>${headOf(dept) ? `<div class="dcard-head">👤 ${h(profName(headOf(dept)))}</div>` : ''}<div class="dcard-n"><b>${ds.length}</b> ${L('docs', 'док.')} · <b>${nf}</b> ${L('folders', 'папок')}</div>
         <div class="dcard-bar">${['active', 'in_approval', 'expiring', 'expired', 'draft'].map(k => seg(k) ? `<i style="--c:${DOC_ST[k][2]};--w:${seg(k) / tot * 100}%" title="${lb(DOC_ST[k])}: ${seg(k)}"></i>` : '').join('')}</div></button>`; };
     pane = `<div class="fp-h"><div class="crumbs"><b>${L('Departments', 'Отделы')}</b> <span class="muted">· ${L('choose a department to see its folders', 'выберите отдел, чтобы открыть его папки')}</span></div></div><div class="dgrid">${depts.map(card).join('')}</div>`;
   } else {
@@ -2593,6 +2632,8 @@ async function routeBuilder(d, D, tplMode) {
   let steps = [{ order_no: 1, role: 'reviewer', assignee_id: '', rule: 'all', due_days: 3 }, { order_no: 2, role: 'approver', assignee_id: '', rule: 'all', due_days: 3 }];
   const best = d ? tpls.find(t => t.type_id === d.type_id) : null; if (best && !tplMode) steps = best.steps.map(s => ({ assignee_id: '', ...s }));
   if (tplMode && tplMode.steps) steps = tplMode.steps.map(s => ({ assignee_id: '', ...s }));
+  const fillHead = () => { if (tplMode || !d) return; const hd = headOf(d.department); if (hd) steps.forEach(s => { if (!s.assignee_id && isHeadLbl(s)) s.assignee_id = hd; }); };
+  fillHead();
   const m = modal(`${mHead(tplMode ? L('Route template', 'Шаблон маршрута') : L('Send for approval', 'Отправить на согласование'), tplMode ? '' : `${h(d.reg_no)} · v${d.current_version} · ${h(d.title)}`)}
     <div class="mdl-b">${tplMode ? `<div class="grid2"><div class="field"><label>${L('Template name (EN)', 'Название шаблона (EN)')}</label><input class="input" id="rb_name" value="${h(tplMode.name || '')}"></div><div class="field"><label>${L('Template name (RU)', 'Название шаблона (RU)')}</label><input class="input" id="rb_name_ru" value="${h(tplMode.name_ru || '')}"></div></div>
       <div class="grid2"><div class="field"><label>${L('Category', 'Категория')}</label><select class="select" id="rb_cat">${Object.entries(TPL_CAT).map(([k, v]) => `<option value="${k}" ${(tplMode.category || 'admin') === k ? 'selected' : ''}>${v[2]} ${h(lb(v))}</option>`).join('')}</select></div><div class="field"><label>${L('When to use', 'Когда использовать')}</label><input class="input" id="rb_desc_i" value="${h(tplDesc(tplMode))}"></div></div>
@@ -2627,7 +2668,7 @@ async function routeBuilder(d, D, tplMode) {
     $('#rb_prev', m).innerHTML = `<div class="muted small" style="margin-bottom:6px">${L('Preview', 'Предпросмотр')}</div><div class="rbp">${orders.map(o => `<div class="rbp-col"><div class="rbp-n">${L('Step', 'Шаг')} ${o}</div>${steps.filter(s => s.order_no === o).map(s => `<div class="rbp-s ${s.assignee_id ? '' : 'pend'}"><span>${ROLE_S[s.role][2]}</span>${h(profName(s.assignee_id) || stepLbl(s) || '?')}</div>`).join('')}</div>`).join('<div class="rbp-arr">→</div>')}</div>`;
   };
   $('#rb_add', m).addEventListener('click', () => { steps.push({ order_no: Math.max(0, ...steps.map(s => s.order_no)) + 1, role: 'approver', assignee_id: '', rule: 'all', due_days: 3 }); render(); });
-  $('#rb_tpl', m)?.addEventListener('change', e => { const t = tpls.find(x => String(x.id) === e.target.value); if (t) { steps = t.steps.map(s => ({ assignee_id: '', ...s })); $('#rb_desc', m).innerHTML = tplDesc(t) ? '💡 ' + h(tplDesc(t)) : ''; render(); } });
+  $('#rb_tpl', m)?.addEventListener('change', e => { const t = tpls.find(x => String(x.id) === e.target.value); if (t) { steps = t.steps.map(s => ({ assignee_id: '', ...s })); fillHead(); $('#rb_desc', m).innerHTML = tplDesc(t) ? '💡 ' + h(tplDesc(t)) : ''; render(); } });
   $('#rb_go', m).addEventListener('click', async () => {
     if (!steps.length) return toast(L('Add at least one participant', 'Добавьте хотя бы одного участника'), true);
     try {
@@ -2734,7 +2775,7 @@ async function viewControl(tab = 'requests') {
   if (!S.docs) S.docs = await api.docs();
   const docById = id => S.docs.find(x => x.id === id) || {};
   const pend = reqs.filter(r => r.status === 'pending');
-  const tabs = [['requests', L('Change requests', 'Запросы на изменение'), pend.length], ['types', L('Document types', 'Типы документов')], ['templates', L('Route templates', 'Шаблоны маршрутов')], ['codes', L('Department codes', 'Коды отделов')]];
+  const tabs = [['requests', L('Change requests', 'Запросы на изменение'), pend.length], ['types', L('Document types', 'Типы документов')], ['templates', L('Route templates', 'Шаблоны маршрутов')], ['codes', L('Departments & heads', 'Отделы и руководители')]];
   let body = '';
   if (tab === 'requests') body = `<div class="callout">${L('Approving applies the change to the document right away and records it in its audit trail. Rejecting requires a reason.', 'Одобрение сразу применяет изменение к документу и пишет его в журнал. Отказ — с причиной.')}</div>
     ${reqs.length ? reqs.sort((a, b) => (a.status !== 'pending') - (b.status !== 'pending') || b.id - a.id).map(r => { const d = docById(r.document_id); return `<div class="req-row card" style="padding:16px 18px;margin-bottom:10px"><div><a href="#/doc/${d.id}/requests" class="regno">${h(d.reg_no || '')}</a> <b>${lb(CR_KIND[r.kind])}</b> <span class="badge dot" style="--c:${r.status === 'pending' ? '#C9930F' : r.status === 'approved' ? '#2DBE82' : '#E25555'}">${lb({ pending: ['Pending', 'Ожидает'], approved: ['Approved', 'Одобрен'], rejected: ['Rejected', 'Отклонён'] }[r.status])}</span>
@@ -2753,7 +2794,11 @@ async function viewControl(tab = 'requests') {
       ${cat ? `<div class="tpc-grid">${list.map(card).join('')}</div>` : Object.keys(TPL_CAT).map(k => { const g = list.filter(t => (t.category || 'admin') === k); return g.length ? `<h4 class="sec-h tp-sec">${TPL_CAT[k][2]} ${h(lb(TPL_CAT[k]))} <span class="muted">· ${g.length}</span></h4><div class="tpc-grid">${g.map(card).join('')}</div>` : ''; }).join('')}
       ${list.length ? '' : `<div class="card"><div class="empty">${L('No templates found', 'Шаблоны не найдены')}</div></div>`}`;
   }
-  else body = `<div class="callout">${L('The code is used in registration numbers: CODE-YEAR-NUMBER. Documents of departments without a code get GEN.', 'Код используется в номерах: КОД-ГОД-НОМЕР. Документы отделов без кода получают GEN.')}</div><div class="card table-wrap" style="max-width:720px"><table class="t"><thead><tr><th>${L('Department', 'Отдел')}</th><th>${L('Code', 'Код')}</th><th></th></tr></thead><tbody>${S.departments.map(dp => `<tr style="cursor:default"><td>${h(dp.name)}</td><td><input class="input" maxlength="5" data-code="${dp.id}" value="${h(dp.code || '')}" style="width:110px;text-transform:uppercase"></td><td><button class="btn primary sm" data-codesave="${dp.id}">${L('Save', 'Сохранить')}</button></td></tr>`).join('')}</tbody></table></div>`;
+  else { const ppl = S.profiles.filter(p => p.role !== 'pending').sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+    body = `<div class="callout">${L('The code is used in registration numbers: CODE-YEAR-NUMBER (no code → GEN). The head is put automatically into “Head of department” route steps and can manage the department’s folders.', 'Код используется в номерах: КОД-ГОД-НОМЕР (без кода — GEN). Руководитель автоматически подставляется в шаги маршрута «Руководитель отдела» и управляет папками отдела.')}</div><div class="card table-wrap" style="max-width:980px"><table class="t"><thead><tr><th>${L('Department', 'Отдел')}</th><th>${L('Code', 'Код')}</th><th>${L('Head', 'Руководитель')}</th><th>${L('Staff in system', 'Сотрудников в системе')}</th><th></th></tr></thead><tbody>${S.departments.map(dp => `<tr style="cursor:default"><td><b>${h(dp.name)}</b></td><td><input class="input" maxlength="5" data-code="${dp.id}" value="${h(dp.code || '')}" style="width:96px;text-transform:uppercase"></td>
+      <td><select class="select" data-head="${dp.id}" style="min-width:240px"><option value="">—</option>${ppl.map(p => `<option value="${p.id}" ${dp.head_id === p.id ? 'selected' : ''}>${h(p.full_name || p.email)}${p.position ? ' · ' + h(p.position) : ''}</option>`).join('')}</select></td>
+      <td class="muted">${S.profiles.filter(p => p.department === dp.name).length}</td><td><button class="btn primary sm" data-codesave="${dp.id}">${L('Save', 'Сохранить')}</button></td></tr>`).join('')}</tbody></table></div>
+      <div class="muted small" style="margin-top:10px">${L('New departments are added in OEC Admin → Departments.', 'Новые отделы добавляются в «Админ OEC → Подразделения».')}</div>`; }
   const extra = `<div class="tabs">${tabs.map(([k, t, c]) => `<a href="#/control/${k}" class="${tab === k ? 'on' : ''}">${t}${c ? ` <span class="tc warn">${c}</span>` : ''}</a>`).join('')}</div>`;
   mount(shell('control', L('Document control', 'Контроль документов'), L('Document Controllers approve change requests and manage types, route templates and department codes', 'Document Controller одобряет запросы на изменения и ведёт типы документов, шаблоны маршрутов и коды отделов'), '', body, { extra }));
   $$('[data-crok],[data-crno]').forEach(b => b.addEventListener('click', async () => { const id = +(b.dataset.crok || b.dataset.crno), ok = !!b.dataset.crok, c = $(`[data-crc="${id}"]`)?.value.trim() || ''; if (!ok && !c) return toast(L('Add a reason for rejection', 'Укажите причину отказа'), true); try { await api.decideChange(id, ok, c); S.docs = null; toast(ok ? L('Approved and applied', 'Одобрено и применено') : L('Rejected', 'Отклонено')); refreshCounts(); viewControl('requests'); } catch (e) { toast(errMsg(e), true); } }));
@@ -2762,7 +2807,7 @@ async function viewControl(tab = 'requests') {
   $$('[data-tpe]').forEach(b => b.addEventListener('click', () => routeBuilder(null, null, tpls.find(t => t.id === +b.dataset.tpe))));
   $$('[data-tcat]').forEach(b => b.addEventListener('click', () => { S_DOC.tcat = b.dataset.tcat; viewControl('templates'); }));
   const tq = $('#tp_q'); tq?.addEventListener('input', () => { S_DOC.tq = tq.value; clearTimeout(tq._t); tq._t = setTimeout(() => { viewControl('templates').then(() => { const n = $('#tp_q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }); }, 300); });
-  $$('[data-codesave]').forEach(b => b.addEventListener('click', async () => { const v = $(`[data-code="${b.dataset.codesave}"]`).value.trim().toUpperCase(); if (v && !/^[A-Z]{2,5}$/.test(v)) return toast(L('Use 2–5 Latin letters', 'Используйте 2–5 латинских букв'), true); try { await api.saveDeptCode(+b.dataset.codesave, v || null); S.departments = await api.departments(); toast(L('Saved', 'Сохранено')); } catch (e) { toast(errMsg(e), true); } }));
+  $$('[data-codesave]').forEach(b => b.addEventListener('click', async () => { const v = $(`[data-code="${b.dataset.codesave}"]`).value.trim().toUpperCase(); if (v && !/^[A-Z]{2,5}$/.test(v)) return toast(L('Use 2–5 Latin letters', 'Используйте 2–5 латинских букв'), true); try { const hd = $(`[data-head="${b.dataset.codesave}"]`)?.value || null; await api.saveDept(+b.dataset.codesave, { code: v || null, head_id: hd }); S.departments = await api.departments(); toast(L('Saved', 'Сохранено')); } catch (e) { toast(errMsg(e), true); } }));
 }
 
 /* =====================================================================
@@ -2801,6 +2846,129 @@ async function refreshCounts() {
   try { const c = await api.docCounts(); S.myPending = c.myPending; S.pendingCR = c.pendingCR; $$('[data-navcount="approvals"]').forEach(e => { e.textContent = S.myPending || ''; e.hidden = !S.myPending; }); $$('[data-navcount="control"]').forEach(e => { e.textContent = S.pendingCR || ''; e.hidden = !S.pendingCR; }); } catch {}
 }
 
+/* =====================================================================
+   Регламенты: общий регламент документооборота + регламенты процессов
+   ===================================================================== */
+const REG_PFX = { hr: 'HR', procurement: 'PRC', finance: 'FIN', legal: 'LEG', academic: 'ACA', students: 'STU', admin: 'ADM', it: 'IT' };
+const ROLE_DO = {
+  reviewer: ['Checks the content within their area, leaves comments; can return the document for changes.', 'Проверяет содержание в своей зоне ответственности, оставляет замечания; может вернуть на доработку.'],
+  approver: ['Decides: approve, return for changes or reject (a comment is mandatory for the last two).', 'Принимает решение: согласовать, вернуть на доработку или отклонить (для двух последних — с обязательным комментарием).'],
+  signer: ['Signs the document (full name + drawn signature). The signature completes the route.', 'Подписывает документ (ФИО + рисованная подпись). Подпись завершает маршрут.'],
+  cc: ['Receives a copy and confirms acknowledgement. Does not block the route.', 'Получает копию и подтверждает ознакомление. Не блокирует маршрут.'],
+};
+function regGeneral() {
+  const admins = S.profiles.filter(p => p.role === 'admin').map(p => p.full_name).join(', ');
+  const ctrls = S.profiles.filter(p => p.is_doc_controller && p.role !== 'admin').map(p => p.full_name).join(', ');
+  const st = k => `<span class="badge dot" style="--c:${DOC_ST[k][2]}">${lb(DOC_ST[k])}</span>`;
+  const R = (en, ru) => L(en, ru);
+  return [
+    [R('General provisions', 'Общие положения'), [
+      R('This Regulation sets the single procedure for registering, approving, storing and changing documents of Central Asian University (CAU) in the OEC system (oec.centralasian.uz).', 'Настоящий Регламент устанавливает единый порядок регистрации, согласования, хранения и изменения документов Central Asian University (CAU) в системе OEC (oec.centralasian.uz).'),
+      R('The Regulation applies to all departments and employees of CAU who create, approve or use internal documents: policies, regulations, orders, procedures, contracts, memos, reports, applications and other documents listed in the Document types directory.', 'Регламент обязателен для всех подразделений и сотрудников CAU, которые создают, согласуют или используют внутренние документы: политики, положения, приказы, процедуры, договоры, служебные записки, отчёты, заявления и иные документы из справочника типов.'),
+      R('The Document Register in OEC is the only official source of the current version of a document. A document that is not registered in OEC, or whose route is not completed, is considered not approved.', 'Реестр документов OEC — единственный официальный источник действующей редакции документа. Документ, не зарегистрированный в OEC или не прошедший маршрут до конца, считается несогласованным.'),
+      R('The Regulation is maintained by the Operational Excellence Committee (OEC). It is reviewed at least once a year and whenever the approval routes change.', 'Регламент ведёт Operational Excellence Committee (OEC). Он пересматривается не реже раза в год, а также при изменении маршрутов согласования.'),
+    ]],
+    [R('Terms', 'Термины'), [
+      `<b>${R('Document', 'Документ')}</b> — ${R('a registered record with a number, metadata, a file and versions.', 'зарегистрированная запись с номером, реквизитами, файлом и версиями.')}`,
+      `<b>${R('Registration number', 'Регистрационный номер')}</b> — ${R('assigned automatically in the format DEPT-YEAR-NNNN (e.g. ACA-2026-0042); cannot be changed.', 'присваивается автоматически в формате ОТДЕЛ-ГОД-NNNN (например, ACA-2026-0042) и не меняется.')}`,
+      `<b>${R('Route', 'Маршрут')}</b> — ${R('the ordered list of participants who review, approve and sign a specific version of a document. Steps with the same number run in parallel.', 'упорядоченный список участников, которые проверяют, согласуют и подписывают конкретную версию документа. Шаги с одинаковым номером идут параллельно.')}`,
+      `<b>Reviewer / Approver / Signer / CC</b> — ${R('route roles: checks, decides, signs, receives a copy (see section 6).', 'роли в маршруте: проверяет, принимает решение, подписывает, получает копию (см. раздел 6).')}`,
+      `<b>${R('Route template', 'Шаблон маршрута')}</b> — ${R('a standard route for a type of document or process, approved in this Regulation (Appendix — process regulations).', 'типовой маршрут для вида документа или процесса, утверждённый настоящим Регламентом (Приложение — регламенты процессов).')}`,
+      `<b>Document Controller</b> — ${R('an employee who approves change requests and maintains the directories (types, templates, departments).', 'сотрудник, который одобряет запросы на изменение и ведёт справочники (типы, шаблоны, отделы).')}`,
+      `<b>SLA</b> — ${R('the time a participant has to act on a step, in calendar days.', 'срок, за который участник должен выполнить действие по шагу, в календарных днях.')}`,
+    ]],
+    [R('Roles and responsibilities', 'Роли и ответственность'), [
+      `<b>${R('Initiator', 'Инициатор')}</b> — ${R('creates the document, attaches the file, chooses the route template and participants, makes corrections and sends new versions. Responsible for the accuracy of the details.', 'создаёт документ, прикрепляет файл, выбирает шаблон маршрута и участников, вносит правки и отправляет новые версии. Отвечает за достоверность реквизитов.')}`,
+      `<b>${R('Head of department', 'Руководитель отдела')}</b> — ${R('is put automatically into the “Head of department” step for documents of their department, manages the department’s folders and is responsible for the department’s documents being registered in OEC.', 'автоматически подставляется в шаг «Руководитель отдела» для документов своего отдела, управляет папками отдела и отвечает за то, чтобы документы отдела велись в OEC.')}`,
+      `<b>${R('Route participants', 'Участники маршрута')}</b> — ${R('act within the SLA. Silence is not consent: a step without a decision blocks the route and is escalated.', 'действуют в пределах SLA. Молчание не означает согласия: шаг без решения блокирует маршрут и эскалируется.')}`,
+      `<b>Document Controller</b> — ${R('reviews change requests (validity, status, archive, corrections), maintains the directories and monitors expiring documents.', 'рассматривает запросы на изменение (срок, статус, архив, исправления), ведёт справочники и следит за истекающими документами.')}${ctrls ? ' ' + R('Appointed:', 'Назначены:') + ' ' + h(ctrls) + '.' : ''}`,
+      `<b>${R('OEC administrators', 'Администраторы OEC')}</b> (${h(admins)}) — ${R('have Document Controller rights, appoint Controllers and department heads, approve access for new users.', 'имеют права Document Controller, назначают Controllers и руководителей отделов, подтверждают доступ новых пользователей.')}`,
+    ]],
+    [R('Registration and storage', 'Регистрация и хранение'), [
+      R('A document is created via “Document Register → New document”. Required details: title, type, department. Recommended: valid from, valid until (or “no expiry”), review date, owner, counterparty for contracts.', 'Документ создаётся через «Реестр документов → Новый документ». Обязательные реквизиты: название, тип, отдел. Рекомендуемые: действует с, действует до (или «бессрочно»), дата пересмотра, ответственный, контрагент для договоров.'),
+      R('The file is attached as a version. PDF is preferred for the final version; DOCX is allowed while drafting. Each file gets a SHA-256 fingerprint that proves it was not changed after upload.', 'Файл прикрепляется как версия. Для итоговой редакции предпочтителен PDF, на этапе проработки допускается DOCX. Каждый файл получает отпечаток SHA-256, подтверждающий, что он не менялся после загрузки.'),
+      R('Documents are stored by department in folders and subfolders (up to 5 levels). Folders are created by department employees, the head of department and Document Controllers. Only an empty folder can be deleted.', 'Документы хранятся по отделам в папках и подпапках (до 5 уровней). Папки создают сотрудники отдела, руководитель отдела и Document Controller. Удалить можно только пустую папку.'),
+      `<b>${R('Documents are never deleted.', 'Документы не удаляются никогда.')}</b> ${R('An outdated document is archived, superseded or voided through a change request; its history remains in the audit trail.', 'Устаревший документ переводится в архив, отмечается заменённым или аннулируется через запрос на изменение; его история остаётся в журнале.')}`,
+      R('All employees with access to OEC can see all documents in the register.', 'Все сотрудники с доступом к OEC видят все документы реестра.'),
+    ]],
+    [R('Document life cycle', 'Жизненный цикл документа'), [
+      `${st('draft')} → ${st('in_approval')} → ${st('approved')} / ${st('active')} → ${st('expiring')} → ${st('expired')}`,
+      R('After the last signer, the document becomes “Active” from its “valid from” date (until then — “Approved”).', 'После подписи последнего участника документ становится «Действует» с даты «действует с» (до этой даты — «Согласован»).'),
+      R('30 days before “valid until” the document is marked “Expiring soon”; the owner and Document Controllers get a notification. On the next day after “valid until” it becomes “Expired”.', 'За 30 дней до окончания срока документ отмечается «Скоро истекает», ответственный и Document Controller получают уведомление. На следующий день после окончания срока — «Истёк».'),
+      `${R('Closing statuses:', 'Завершающие статусы:')} ${st('superseded')} ${st('archived')} ${st('void')} — ${R('set only through a change request.', 'устанавливаются только через запрос на изменение.')}`,
+    ]],
+    [R('Approval procedure', 'Порядок согласования'), [
+      R('The initiator sends the document via “Send for approval”, choosing the template for the process (Appendix). The template may be supplemented with participants but the mandatory steps of the template must not be removed without the consent of the Document Controller.', 'Инициатор отправляет документ кнопкой «Отправить на согласование», выбирая шаблон процесса (Приложение). Шаблон можно дополнить участниками, но обязательные шаги шаблона без согласия Document Controller не удаляются.'),
+      R('Steps run in order of their number; steps with the same number run in parallel. Rule “all” — everyone in the step must act; rule “any one” — the first decision is enough.', 'Шаги выполняются по порядку номеров; шаги с одинаковым номером — параллельно. Правило «все» — должны отработать все участники шага; правило «любой» — достаточно первого решения.'),
+      `<b>Reviewer</b> — ${lb(ROLE_DO.reviewer)} <b>Approver</b> — ${lb(ROLE_DO.approver)} <b>Signer</b> — ${lb(ROLE_DO.signer)} <b>CC</b> — ${lb(ROLE_DO.cc)}`,
+      R('The version sent for approval is locked. Corrections are made only by uploading a new version and starting a new round; all rounds are kept in the history and on the Approval Sheet.', 'Отправленная на согласование версия блокируется. Правки вносятся только загрузкой новой версии и запуском нового круга; все круги сохраняются в истории и в листе согласования.'),
+      R('“Request changes” or “Reject” requires a comment. Rejection closes the route; the document returns to the initiator.', '«На доработку» и «Отклонить» требуют комментария. Отклонение закрывает маршрут, документ возвращается инициатору.'),
+      R('A participant who is absent (leave, business trip) delegates the step to a colleague with a reason. Delegation is recorded in the audit trail.', 'Отсутствующий участник (отпуск, командировка) делегирует шаг коллеге с указанием причины. Делегирование фиксируется в журнале.'),
+      R('The route can be cancelled by the initiator or a Document Controller before completion.', 'Маршрут может отменить инициатор или Document Controller до его завершения.'),
+      R('The Approval Sheet (printable / PDF) is the record of approval. The drawn signature in OEC is an internal approval mark and is not a qualified electronic signature (E-IMZO); where the law requires it, the original is signed separately.', 'Лист согласования (печать / PDF) — подтверждение согласования. Рисованная подпись в OEC — внутренняя отметка о согласовании и не является квалифицированной ЭЦП (E-IMZO); где этого требует закон, оригинал подписывается отдельно.'),
+    ]],
+    [R('Deadlines and escalation', 'Сроки и эскалация'), [
+      R('Each step has an SLA (by default 1–5 days, set in the template). The term starts when the step becomes active.', 'Каждый шаг имеет SLA (как правило 1–5 дней, задаётся в шаблоне). Срок начинается с момента, когда шаг стал активным.'),
+      R('At 80% of the SLA the participant gets a reminder. When the SLA is exceeded, the step is escalated: the initiator and Document Controllers are notified.', 'При 80% срока участник получает напоминание. При превышении SLA шаг эскалируется: уведомляются инициатор и Document Controller.'),
+      R('Overdue steps are reviewed by OEC; systematic delays are raised as a development area in the OEC list.', 'Просроченные шаги рассматривает OEC; систематические задержки выносятся как зона развития в Перечень OEC.'),
+    ]],
+    [R('Changes after approval', 'Изменения после согласования'), [
+      R('The status, validity and details of an approved document are changed only through “Request change”. Kinds: extend validity, activate, archive, supersede, correct details, void, restore.', 'Статус, срок действия и реквизиты согласованного документа меняются только через «Запросить изменение». Виды: продлить срок, ввести в действие, архив, заменить, исправить реквизиты, аннулировать, восстановить.'),
+      R('Any employee can submit a request with a reason. A Document Controller approves or rejects it (rejection — with a reason). The approved change is applied automatically and recorded in the audit trail.', 'Подать запрос может любой сотрудник с указанием причины. Document Controller одобряет или отклоняет его (отказ — с причиной). Одобренное изменение применяется автоматически и фиксируется в журнале.'),
+      R('Changes to the content of the document (new text) require a new version and a new approval round.', 'Изменение содержания документа (новый текст) требует новой версии и нового круга согласования.'),
+    ]],
+    [R('Notifications', 'Уведомления'), [
+      R('Participants are notified in Telegram (@cau_pgc_bot) and in the system: a new step, a reminder, escalation, the result of approval, comments, change requests and expiring documents. Each employee links Telegram in their profile.', 'Участники получают уведомления в Telegram (@cau_pgc_bot) и в системе: новый шаг, напоминание, эскалация, итог согласования, комментарии, запросы на изменение и истекающие документы. Каждый сотрудник подключает Telegram в профиле.'),
+    ]],
+    [R('Control', 'Контроль'), [
+      R('OEC monitors the register on the dashboard: documents in approval, overdue steps, expiring and expired documents, average approval time.', 'OEC контролирует реестр на дашборде: документы на согласовании, просроченные шаги, истекающие и истёкшие документы, среднее время согласования.'),
+      R('Heads of departments are responsible for transferring the department’s current documents into the register and keeping them up to date.', 'Руководители отделов отвечают за перенос действующих документов отдела в реестр и их актуальность.'),
+    ]],
+  ];
+}
+function regProcess(t, i, types) {
+  const ty = types.find(x => x.id === t.type_id), orders = [...new Set(t.steps.map(s => s.order_no))].sort((a, b) => a - b);
+  const total = orders.reduce((a, o) => a + Math.max(0, ...t.steps.filter(s => s.order_no === o && s.role !== 'cc').map(s => s.due_days)), 0);
+  const code = `РП-${REG_PFX[t.category || 'admin']}-${String(i + 1).padStart(2, '0')}`.replace('РП', L('PR', 'РП'));
+  const who = s => s.assignee_id ? h(profName(s.assignee_id)) + (stepLbl(s) ? ` <span class="muted">(${h(stepLbl(s))})</span>` : '') : h(stepLbl(s) || lb(ROLE_S[s.role]));
+  const rows = orders.map(o => { const g = t.steps.filter(s => s.order_no === o); return g.map((s, j) => `<tr>${j === 0 ? `<td rowspan="${g.length}" class="rg-n">${o}${g.length > 1 ? `<div class="muted small">${L('parallel', 'параллельно')}${g[0].rule === 'any' ? ' · ' + L('any one', 'любой') : ''}</div>` : ''}</td>` : ''}<td>${who(s)}</td><td class="nowrap">${ROLE_S[s.role][2]} ${lb(ROLE_S[s.role])}</td><td class="small">${lb(ROLE_DO[s.role])}</td><td class="nowrap">${s.role === 'cc' ? '—' : s.due_days + ' ' + daysWord(s.due_days)}</td></tr>`).join(''); }).join('');
+  const notes = [
+    t.steps.some(isHeadLbl) ? L('“Head of department” is filled in automatically with the head of the document’s department.', '«Руководитель отдела» подставляется автоматически — руководитель отдела документа.') : '',
+    t.steps.some(s => s.assignee_id) ? L('Some participants are pinned in the template by the Document Controller.', 'Часть участников закреплена в шаблоне Document Controller.') : L('Specific people are chosen by the initiator when sending, according to the “Participant” column.', 'Конкретных людей выбирает инициатор при отправке согласно графе «Участник».'),
+    L('If any participant returns the document, the initiator uploads a corrected version and the route starts again.', 'Если кто-то из участников возвращает документ, инициатор загружает исправленную версию и маршрут запускается заново.'),
+  ].filter(Boolean);
+  return `<article class="rg-proc" id="rp-${t.id}"><div class="rg-ph"><span class="rg-code">${code}</span><h3>${h(tplName(t))}</h3></div>
+    <dl class="rg-kv"><dt>${L('Purpose', 'Назначение')}</dt><dd>${h(tplDesc(t) || '—')}</dd><dt>${L('Document type', 'Тип документа')}</dt><dd>${ty ? h(lb([ty.name_en, ty.name_ru])) : L('Any', 'Любой')}</dd>
+      <dt>${L('Initiator', 'Инициатор')}</dt><dd>${L('Employee of the department concerned: Document Register → New document → send for approval with this template.', 'Сотрудник заинтересованного отдела: Реестр документов → Новый документ → отправить на согласование по этому шаблону.')}</dd>
+      <dt>${L('Maximum term', 'Максимальный срок')}</dt><dd><b>${total} ${daysWord(total)}</b> ${L('(sum of the longest step at each stage)', '(сумма самых длинных шагов на каждом этапе)')}</dd></dl>
+    <table class="t rg-t"><thead><tr><th>${L('Step', 'Шаг')}</th><th>${L('Participant', 'Участник')}</th><th>${L('Role', 'Роль')}</th><th>${L('What they do', 'Что делает')}</th><th>${L('Term', 'Срок')}</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="rg-res"><b>${L('Result', 'Результат')}:</b> ${t.steps.some(s => s.role === 'signer') ? L('after the signature the document becomes “Active” (from its “valid from” date); CC participants get a copy.', 'после подписи документ становится «Действует» (с даты «действует с»); участники в копии получают документ.') : L('after the last approval the document becomes “Active”; CC participants get a copy.', 'после последнего согласования документ становится «Действует»; участники в копии получают документ.')}</div>
+    <ul class="rg-notes">${notes.map(n => `<li>${n}</li>`).join('')}</ul></article>`;
+}
+async function viewRegs(tab) {
+  tab = tab || 'general';
+  mount(shell('regs', L('Regulations', 'Регламенты'), L('Loading…', 'Загрузка…'), '', SKELETON));
+  const [tpls, types] = await Promise.all([api.routeTemplates(), S.docTypes ? Promise.resolve(S.docTypes) : api.docTypes()]); S.docTypes = types;
+  const today = new Date().toLocaleDateString(LOCALE(), { day: '2-digit', month: 'long', year: 'numeric' });
+  const gen = regGeneral();
+  const cats = Object.keys(TPL_CAT).filter(c => tpls.some(t => (t.category || 'admin') === c));
+  const byCat = c => tpls.filter(t => (t.category || 'admin') === c);
+  const toc = tab === 'general' ? gen.map(([tt], i) => `<a href="#rg-${i + 1}" data-rgo="rg-${i + 1}"><span>${i + 1}</span>${h(tt)}</a>`).join('') + `<a data-rtab="processes"><span>${L('App.', 'Прил.')}</span>${L('Process regulations', 'Регламенты процессов')} · ${tpls.length}</a>`
+    : cats.map(c => `<div class="rg-tc">${TPL_CAT[c][2]} ${h(lb(TPL_CAT[c]))}</div>${byCat(c).map(t => `<a data-rgo="rp-${t.id}">${h(tplName(t))}</a>`).join('')}`).join('');
+  const docHead = `<div class="rg-doc-h"><img src="${LOGO}" alt="CAU"><div><div class="muted small">Central Asian University · Operational Excellence Committee</div><h2>${tab === 'general' ? L('Regulation on document management and approval in OEC', 'Регламент документооборота и согласования документов в системе OEC') : L('Appendix. Regulations of approval processes', 'Приложение. Регламенты процессов согласования')}</h2><div class="muted small">${L('Edition of', 'Редакция от')} ${today} · oec.centralasian.uz</div></div></div>`;
+  const content = tab === 'general'
+    ? gen.map(([tt, cl], i) => `<section class="rg-sec" id="rg-${i + 1}"><h3><span>${i + 1}.</span> ${h(tt)}</h3><ol>${cl.map((c, j) => `<li><span class="rg-cl">${i + 1}.${j + 1}</span><div>${c}</div></li>`).join('')}</ol></section>`).join('')
+    : `<p class="rg-intro">${L('The appendix sets the standard approval routes. Each route is the template that the initiator selects when sending a document. The routes are kept up to date by Document Controllers in “Document control → Route templates”; this appendix is generated from them automatically.', 'Приложение устанавливает типовые маршруты согласования. Каждый маршрут — шаблон, который инициатор выбирает при отправке документа. Маршруты поддерживает в актуальном виде Document Controller в «Контроль документов → Шаблоны маршрутов»; приложение формируется из них автоматически.')}</p>`
+      + cats.map(c => `<h2 class="rg-cat">${TPL_CAT[c][2]} ${h(lb(TPL_CAT[c]))}</h2>${byCat(c).map((t, i) => regProcess(t, i, types)).join('')}`).join('');
+  const extra = `<div class="tabs"><a href="#/regs/general" class="${tab === 'general' ? 'on' : ''}">${L('General regulation', 'Общий регламент')}</a><a href="#/regs/processes" class="${tab === 'processes' ? 'on' : ''}">${L('Process regulations', 'Регламенты процессов')} <span class="tc">${tpls.length}</span></a></div>`;
+  const body = `<div class="rg"><nav class="rg-toc">${tab === 'processes' ? `<input class="input" id="rg_q" placeholder="${L('Find a process…', 'Найти процесс…')}">` : ''}${toc}</nav><div class="rg-doc card">${docHead}${content}</div></div>`;
+  mount(shell('regs', L('Regulations', 'Регламенты'), L('How documents are registered, approved and changed at CAU — the rules everyone follows.', 'Как в CAU регистрируются, согласуются и меняются документы — правила для всех.'), `<button class="btn on-navy" id="rg_print">🖨 ${L('Print / Save as PDF', 'Печать / PDF')}</button>`, body, { extra }));
+  $('#rg_print').addEventListener('click', () => window.print());
+  $$('[data-rgo]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.getElementById(a.dataset.rgo)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  $$('[data-rtab]').forEach(a => a.addEventListener('click', () => { location.hash = '#/regs/' + a.dataset.rtab; }));
+  $('#rg_q')?.addEventListener('input', e => { const q = e.target.value.toLowerCase(); $$('.rg-toc a[data-rgo]').forEach(a => { a.hidden = q && !a.textContent.toLowerCase().includes(q); }); $$('.rg-proc').forEach(p => { p.hidden = q && !p.querySelector('h3').textContent.toLowerCase().includes(q); }); });
+}
+
 function setLang(l) { if (l === window.LANG) return; ls.set('oec_lang', l); if (S.me && !DEMO) api.updateProfile(S.me.id, { lang: l }).catch(() => {}); location.reload(); }
 function bindLang() { $$('[data-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang))); }
 
@@ -2824,6 +2992,7 @@ async function route() {
       case 'approvals': return viewApprovals(arg);
       case 'sheet': return viewSheet(+arg);
       case 'control': return viewControl(arg);
+      case 'regs': return viewRegs(arg);
       case 'timeline': return viewTimeline();
       case 'p': return viewProblem(arg);
       case 'new': return viewWizard();
