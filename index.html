@@ -2603,6 +2603,7 @@ let booting = false;
 async function boot() {
   if (booting) return; booting = true;
   window.I18N?.start();
+  if (window.LANG === 'en') document.title = 'OEC · Development Areas & Documents';
   $('#root').innerHTML = BOOT_HTML();
   try {
     const session = await api.session();
