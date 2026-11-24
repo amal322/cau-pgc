@@ -408,6 +408,11 @@ table.t{width:100%;border-collapse:collapse;font-size:13.5px}
 @keyframes shimmer{to{background-position:-200% 0}}
 .sk-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px}
 @media (prefers-reduced-motion:reduce){#topbar::before,.boot img,.boot-bar::before,.sk{animation:none}}
+.co-pick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:24px;align-items:center}
+.co-tag{display:inline-flex;align-items:center;gap:6px;background:#EDE9FE;color:#4C2FB8;border-radius:99px;padding:4px 6px 4px 11px;font-size:13px;font-weight:600;animation:fadein .2s ease}
+.co-tag button{border:0;background:rgba(76,47,184,.12);color:inherit;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:10px;line-height:1}
+.co-tag button:hover{background:rgba(76,47,184,.25)}
+.co-chip{background:#EDE9FE;color:#4C2FB8;border-radius:99px;padding:0 7px;font-size:11.5px;font-weight:700}
 
 /* =================== DOCUMENTS =================== */
 .regno{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.01em;color:var(--navy);white-space:nowrap}
@@ -699,6 +704,9 @@ tr[draggable]:hover .grip{opacity:1}tr.dragging{opacity:.4}
    ===================================================================== */
 (function () {
   const D = {
+    'Основной ответственный': 'Main owner', 'Соисполнители': 'Co-assignees', 'Соисполнители:': 'Co-assignees:', '＋ Добавить соисполнителя…': '＋ Add co-assignee…', 'Нет соисполнителей': 'No co-assignees',
+    'соисполнитель': 'co-assignee', 'добавил(а) соисполнителей:': 'added co-assignees:', 'снял(а) соисполнителей:': 'removed co-assignees:',
+    'При назначении ответственного и срока статус сам станет «В работе». Ответственный и соисполнители получат уведомления в Telegram.': 'Once an owner and a deadline are set, the status becomes “In progress”. The owner and co-assignees are notified in Telegram.',
     // ---- навигация и каркас
     'Дашборд': 'Dashboard', 'Перечень зон развития': 'Development Areas', 'Перечень зон развития OEC': 'OEC Development Areas',
     'Таймлайн': 'Timeline', 'Мои задачи': 'My tasks', 'Админ OEC': 'OEC Admin', 'Профиль': 'Profile', 'Озвучить задачу': 'Raise a task',
@@ -955,8 +963,11 @@ const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSO
              del(k) { try { localStorage.removeItem(k); } catch {} } };
 function enrich(p) {
   const dl = daysTo(p.agreed_deadline);
-  return { ...p, days_left: dl, is_overdue: dl !== null && dl < 0 && isOpen(p) };
+  return { ...p, co_responsible_ids: p.co_responsible_ids || [], days_left: dl, is_overdue: dl !== null && dl < 0 && isOpen(p) };
 }
+const isCo = (p, uid) => (p.co_responsible_ids || []).includes(uid);
+const onTeam = (p, uid) => p.responsible_id === uid || isCo(p, uid);
+const coNames = p => (p.co_responsible_ids || []).map(id => (S.profiles || []).find(x => x.id === id)?.full_name).filter(Boolean);
 const ICON = {
   dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>',
@@ -1091,7 +1102,7 @@ function DemoAPI() {
   const name = id => P.find(p => p.id === id)?.full_name || null;
   const view = p => enrich({ ...p, responsible_name: name(p.responsible_id), responsible_email: P.find(x => x.id === p.responsible_id)?.email, submitter_name: name(p.submitted_by) });
   const clone = x => JSON.parse(JSON.stringify(x));
-  const ASSESS = ['category','priority','urgency','scale','decision_level','lead_department','related_departments','responsible_id','agreed_deadline','rector_decision','next_step','status','control_date','coordinator_comment'];
+  const ASSESS = ['category','priority','urgency','scale','decision_level','lead_department','related_departments','responsible_id','co_responsible_ids','agreed_deadline','rector_decision','next_step','status','control_date','coordinator_comment'];
   return {
     demoUsers: P, setDemoUser(id) { me = id; ls.set('pgc_demo_user', id); },
     async session() { return { user: { id: me } }; }, onAuth() {},
@@ -1117,6 +1128,9 @@ function DemoAPI() {
       p.closed_at = p.status === 'Закрыта' ? (old.status === 'Закрыта' ? old.closed_at : new Date().toISOString()) : null;
       if (old.status !== p.status) log(id, me, 'status', '', old.status, p.status);
       if (old.responsible_id !== p.responsible_id) log(id, me, 'assign', '', name(old.responsible_id), name(p.responsible_id));
+      p.co_responsible_ids = [...new Set((p.co_responsible_ids || []).filter(x => x && x !== p.responsible_id))];
+      { const was = old.co_responsible_ids || [], now = p.co_responsible_ids, add = now.filter(x => !was.includes(x)), rem = was.filter(x => !now.includes(x));
+        if (add.length || rem.length) log(id, me, 'co_assign', '', rem.map(name).join(', ') || null, add.map(name).join(', ') || null); }
       if (old.agreed_deadline !== p.agreed_deadline) log(id, me, 'deadline', '', old.agreed_deadline ? fmtD(old.agreed_deadline) : null, p.agreed_deadline ? fmtD(p.agreed_deadline) : null);
       const aKeys = ['category','priority','urgency','scale','decision_level','lead_department','related_departments','rector_decision','next_step','control_date','coordinator_comment'];
       if (aKeys.some(k => JSON.stringify(old[k]) !== JSON.stringify(p[k]))) log(id, me, 'assessment', 'Обновлена оценка OEC');
@@ -1126,7 +1140,7 @@ function DemoAPI() {
     },
     async addActivity(problem_id, kind, body) {
       const p = probs.find(x => x.id == problem_id);
-      if (kind === 'done_request' && p.responsible_id !== me) throw new Error('Только ответственный может сообщить о выполнении');
+      if (kind === 'done_request' && !onTeam(p, me)) throw new Error('Только ответственный или соисполнитель может сообщить о выполнении');
       log(problem_id, me, kind, body);
     },
     async upload(problem_id, file) { atts.push({ id: atts.length + 1, problem_id, path: URL.createObjectURL(file), name: file.name, size: file.size, uploaded_by: me, created_at: new Date().toISOString() }); },
@@ -1368,7 +1382,7 @@ function bars(items, color) {
 const countBy = (arr, fn) => { const m = new Map(); arr.forEach(x => { const k = fn(x); m.set(k, (m.get(k) || 0) + 1); }); return [...m].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value); };
 function problemLi(p) {
   return `<div class="li" data-go="p/${p.id}"><div style="flex:1;min-width:0"><div class="li-t"><span class="pill-id">№${p.id}</span> ${h(p.title)}</div>
-    <div class="li-m">${statusB(p.status)}${p.priority ? prioB(p.priority) : ''}${p.responsible_name ? `<span>${h(p.responsible_name)}</span>` : ''}${p.agreed_deadline ? dlChip(p) : ''}</div></div></div>`;
+    <div class="li-m">${statusB(p.status)}${p.priority ? prioB(p.priority) : ''}${p.responsible_name ? `<span data-notr>${h(p.responsible_name)}</span>` : ''}${(p.co_responsible_ids || []).length ? `<span class="co-chip" title="${h(coNames(p).join(', '))}">+${p.co_responsible_ids.length}</span>` : ''}${isCo(p, S.me.id) ? '<span class="badge" style="--c:#8A6CF0">соисполнитель</span>' : ''}${p.agreed_deadline ? dlChip(p) : ''}</div></div></div>`;
 }
 function bindGo(el) { $$('[data-go]', el).forEach(x => x.addEventListener('click', e => { if (e.target.closest('a,button,select,input')) return; location.hash = '#/' + x.dataset.go; })); }
 
@@ -1376,7 +1390,7 @@ function bindGo(el) { $$('[data-go]', el).forEach(x => x.addEventListener('click
    Каркас
    ===================================================================== */
 function shell(active, title, sub, actions, body, o = {}) {
-  const myOpen = S.problems.filter(p => p.responsible_id === S.me.id && isOpen(p)).length;
+  const myOpen = S.problems.filter(p => onTeam(p, S.me.id) && isOpen(p)).length;
   const queue = S.problems.filter(p => ['Новая', 'На оценке'].includes(p.status)).length + S.profiles.filter(p => p.role === 'pending').length;
   const nav = [
     ['dashboard', 'Дашборд', ICON.dash], ['registry', 'Перечень зон развития', ICON.list], ['timeline', 'Таймлайн', ICON.gantt], ['documents', L('Document Register', 'Реестр документов'), ICON.doc], ['approvals', L('Approvals', 'Согласования'), ICON.appr, S.myPending], ['regs', L('Regulations', 'Регламенты'), ICON.book], ...(isCtrl() ? [['control', L('Document control', 'Контроль документов'), ICON.ctrl, S.pendingCR]] : []),
@@ -1637,8 +1651,8 @@ function filtered() {
     (!q || [p.title, p.description, p.applicant_name, p.applicant_department, String(p.id)].join(' ').toLowerCase().includes(q)) &&
     (!f.status || (f.status === '__open' ? isOpen(p) : p.status === f.status)) && (!f.priority || p.priority === f.priority) &&
     (!f.category || p.category === f.category) && (!f.dept || p.applicant_department === f.dept) &&
-    (!f.resp || (f.resp === '__none' ? !p.responsible_id : p.responsible_id === f.resp)) &&
-    (!f.overdue || p.is_overdue) && (!f.mine || p.submitted_by === S.me.id) && (!f.assigned || p.responsible_id === S.me.id));
+    (!f.resp || (f.resp === '__none' ? !p.responsible_id : onTeam(p, f.resp))) &&
+    (!f.overdue || p.is_overdue) && (!f.mine || p.submitted_by === S.me.id) && (!f.assigned || onTeam(p, S.me.id)));
   const pr = { 'Критический': 0, 'Высокий': 1, 'Средний': 2, 'Низкий': 3 };
   const key = { id: p => p.id, status: p => ENUM.status.indexOf(p.status), priority: p => pr[p.priority] ?? 9, deadline: p => p.agreed_deadline || '9999', resp: p => p.responsible_name || 'яяя', title: p => p.title.toLowerCase() }[f.sort] || (p => p.id);
   return r.sort((a, b) => (key(a) > key(b) ? 1 : key(a) < key(b) ? -1 : 0) * f.dir);
@@ -1646,7 +1660,7 @@ function filtered() {
 function viewRegistry() {
   const f = S.filters;
   const depts = [...new Set(S.problems.map(p => p.applicant_department).filter(Boolean))].sort();
-  const resps = S.profiles.filter(p => S.problems.some(x => x.responsible_id === p.id));
+  const resps = S.profiles.filter(p => S.problems.some(x => onTeam(x, p.id)));
   const rows = filtered();
   const th = (k, t) => `<th data-sort="${k}">${t}${f.sort === k ? (f.dir > 0 ? ' ↑' : ' ↓') : ''}</th>`;
   const body = `<div class="card lift">
@@ -1703,7 +1717,7 @@ async function viewProblem(id) {
   try { p = await api.problem(id); } catch (e) { $('#content').innerHTML = `<div class="empty">Задача не найдена</div>`; return; }
   if (isAdmin() && p.status === 'Новая') { try { await api.update(p.id, { status: 'На оценке' }); p = await api.problem(id); reloadProblems(); } catch {} }
   const [act, atts] = await Promise.all([api.activity(id), api.attachments(id)]);
-  const admin = isAdmin(), mine = p.submitted_by === S.me.id, resp = p.responsible_id === S.me.id;
+  const admin = isAdmin(), mine = p.submitted_by === S.me.id, resp = onTeam(p, S.me.id);
   const canEdit = admin || (mine && p.status === 'Новая');
   const canUpload = admin || mine || resp;
 
@@ -1723,7 +1737,7 @@ async function viewProblem(id) {
     ${!p.materials && !atts.length ? '<div class="muted">Материалов пока нет</div>' : ''}
     ${canUpload ? `<label class="btn sm" style="margin-top:8px">＋ Прикрепить файл<input type="file" id="upl" multiple hidden></label>` : ''}</div></div>`;
 
-  const AIC = { created: ['🆕', '#E0E7FF'], comment: ['💬', '#F1F5F9'], status: ['🔄', '#E0F2FE'], assign: ['👤', '#EDE9FE'], deadline: ['⏰', '#FEF3C7'], assessment: ['📋', '#ECFDF5'], done_request: ['✅', '#D1FAE5'], edit: ['✏️', '#F1F5F9'] };
+  const AIC = { created: ['🆕', '#E0E7FF'], comment: ['💬', '#F1F5F9'], status: ['🔄', '#E0F2FE'], assign: ['👤', '#EDE9FE'], co_assign: ['👥', '#EDE9FE'], deadline: ['⏰', '#FEF3C7'], assessment: ['📋', '#ECFDF5'], done_request: ['✅', '#D1FAE5'], edit: ['✏️', '#F1F5F9'] };
   const actText = a => {
     const who = `<b>${h(a.author?.full_name || a.author?.email || 'Система')}</b>`;
     switch (a.kind) {
@@ -1731,6 +1745,7 @@ async function viewProblem(id) {
       case 'comment': return `${who} оставил(а) комментарий`;
       case 'status': return `${who} изменил(а) статус: ${statusB(a.old_value)} → ${statusB(a.new_value)}`;
       case 'assign': return a.new_value ? `${who} назначил(а) ответственного: <b>${h(a.new_value)}</b>` : `${who} снял(а) ответственного`;
+      case 'co_assign': return `${who} ${a.new_value ? `<span>добавил(а) соисполнителей:</span> <b data-notr>${h(a.new_value)}</b>` : ''}${a.new_value && a.old_value ? '; ' : ''}${a.old_value ? `<span>снял(а) соисполнителей:</span> <b data-notr>${h(a.old_value)}</b>` : ''}`;
       case 'deadline': return `${who} ${a.new_value ? `установил(а) дедлайн: <b>${h(a.new_value)}</b>` : 'снял(а) дедлайн'}${a.old_value ? ` <span class="muted">(было ${h(a.old_value)})</span>` : ''}`;
       case 'assessment': return `${who} обновил(а) оценку OEC`;
       case 'done_request': return `${who} сообщил(а) о выполнении`;
@@ -1748,13 +1763,14 @@ async function viewProblem(id) {
 
   const dl = p.agreed_deadline ? (isOpen(p) ? (p.days_left < 0 ? ['Просрочено', `${-p.days_left} ${plural(-p.days_left, 'день', 'дня', 'дней')}`, 'var(--danger)'] : p.days_left === 0 ? ['Дедлайн', 'Сегодня', 'var(--danger)'] : ['До дедлайна', `${p.days_left} ${plural(p.days_left, 'день', 'дня', 'дней')}`, p.days_left <= 3 ? 'var(--warn)' : 'var(--ink)']) : ['Дедлайн', fmtD(p.agreed_deadline), 'var(--ok)']) : null;
   const dlCard = `<div class="card deadline-card">${dl ? `<div><div class="muted small">${dl[0]}</div><div class="big" style="color:${dl[2]}">${dl[1]}</div><div class="muted small" style="margin-top:4px">${fmtD(p.agreed_deadline)}</div></div>` : `<div><div class="muted small">Дедлайн</div><div class="big muted" style="font-size:20px">не назначен</div></div>`}
-    <div style="margin-left:auto;text-align:right"><div class="muted small">Ответственный</div><div style="font-weight:600">${p.responsible_name ? h(p.responsible_name) : '<span class="muted">не назначен</span>'}</div></div></div>`;
+    <div style="margin-left:auto;text-align:right"><div class="muted small">Ответственный</div><div style="font-weight:600">${p.responsible_name ? h(p.responsible_name) : '<span class="muted">не назначен</span>'}</div>${coNames(p).length ? `<div class="muted small" style="margin-top:4px">Соисполнители</div><div style="font-weight:500" data-notr>${h(coNames(p).join(', '))}</div>` : ''}</div></div>`;
 
   let assessCard;
   if (admin) {
     assessCard = `<div class="card lift"><div class="assess-h"><h3>Оценка OEC</h3><div>Видят все, меняют только администраторы</div></div><div class="card-b" id="assess" style="padding-top:18px">
       <div class="field"><label>Статус</label><select class="select" name="status">${opts(ENUM.status, p.status, null)}</select></div>
-      <div class="field"><label>Ответственный за решение</label><select class="select" name="responsible_id">${peopleOpts(p.responsible_id)}</select></div>
+      <div class="field"><label>Основной ответственный</label><select class="select" name="responsible_id">${peopleOpts(p.responsible_id)}</select></div>
+      <div class="field"><label>Соисполнители</label><div class="co-pick" id="coPick"></div><select class="select" id="coAdd"><option value="">＋ Добавить соисполнителя…</option>${S.profiles.filter(x => x.role !== 'pending').map(x => `<option value="${x.id}">${h(x.full_name || x.email)}${x.department ? ' · ' + h(x.department) : ''}</option>`).join('')}</select></div>
       <div class="field"><label>Согласованный срок</label><input class="input" type="date" name="agreed_deadline" value="${p.agreed_deadline || ''}"></div>
       <div class="grid2"><div class="field"><label>Приоритет</label><select class="select" name="priority">${opts(ENUM.priority, p.priority)}</select></div>
       <div class="field"><label>Срочность</label><select class="select" name="urgency">${opts(ENUM.urgency, p.urgency)}</select></div></div>
@@ -1769,7 +1785,7 @@ async function viewProblem(id) {
       <div class="field"><label>Комментарий координатора</label><textarea class="textarea" name="coordinator_comment" style="min-height:70px">${h(p.coordinator_comment)}</textarea></div>
       <datalist id="deptList">${S.departments.map(d => `<option value="${h(d.name)}">`).join('')}</datalist>
       <button class="btn gold" id="saveAssess" style="width:100%;justify-content:center;padding:12px">Сохранить оценку</button>
-      <div class="muted small" style="margin-top:8px">При назначении ответственного и срока статус сам станет «В работе», ответственный получит уведомление в Telegram.</div>
+      <div class="muted small" style="margin-top:8px">При назначении ответственного и срока статус сам станет «В работе». Ответственный и соисполнители получат уведомления в Telegram.</div>
     </div></div>`;
   } else {
     const kv = [['Категория', p.category], ['Приоритет', p.priority ? prioB(p.priority) : null, 1], ['Срочность', p.urgency], ['Масштаб влияния', p.scale], ['Уровень решения', p.decision_level], ['Решение ректора', p.rector_decision], ['Ведущее подразделение', p.lead_department], ['Связанные подразделения', (p.related_departments || []).join(', ')], ['Следующий шаг', p.next_step], ['Контрольная проверка', p.control_date ? fmtD(p.control_date) : ''], ['Комментарий координатора', p.coordinator_comment]];
@@ -1786,7 +1802,7 @@ async function viewProblem(id) {
     <div class="d-hero"><div><div class="d-badges"><span class="pill-id" style="color:var(--gold-hi)">№${p.id}</span>${statusB(p.status)}${p.priority ? `<span class="badge" style="--c:${PRIO_C[p.priority]}">${h(p.priority)}</span>` : ''}${p.category ? `<span class="badge">${h(p.category)}</span>` : ''}</div>
       <h1 class="d-title">${h(p.title)}</h1>
       <div class="d-meta">Озвучил(а) ${h(p.applicant_name)}, ${h(p.applicant_department)}, ${fmtD(p.submitted_on)}${p.closed_at ? `. Закрыта ${fmtD(p.closed_at)}` : ''}</div></div>
-      <div class="d-dl">${dlBig}<div class="resp">Ответственный: <b>${p.responsible_name ? h(p.responsible_name) : 'не назначен'}</b></div></div></div>`;
+      <div class="d-dl">${dlBig}<div class="resp">Ответственный: <b>${p.responsible_name ? h(p.responsible_name) : 'не назначен'}</b></div>${coNames(p).length ? `<div class="resp">Соисполнители: <b data-notr>${h(coNames(p).join(', '))}</b></div>` : ''}</div></div>`;
   const body = `<div class="d-grid"><div>${appCard}${matCard}${tlCard}</div><div>${assessCard}</div></div>`;
   mount(shell('registry', 'Карточка задачи', '', '', body, { hero: dHero, tall: true }));
 
@@ -1794,9 +1810,17 @@ async function viewProblem(id) {
   $('#upl')?.addEventListener('change', async e => { try { for (const f of e.target.files) await api.upload(p.id, f); toast('Файл прикреплён'); viewProblem(id); } catch (er) { toast(errMsg(er), true); } });
   $('#cmtSend').addEventListener('click', async () => { const v = $('#cmt').value.trim(); if (!v) return; try { await api.addActivity(p.id, 'comment', v); toast('Комментарий отправлен'); viewProblem(id); } catch (e) { toast(errMsg(e), true); } });
   $('#doneReq')?.addEventListener('click', async () => { try { await api.addActivity(p.id, 'done_request', $('#cmt').value.trim()); toast('Администраторы уведомлены о выполнении'); viewProblem(id); } catch (e) { toast(errMsg(e), true); } });
+  let coSel = [...(p.co_responsible_ids || [])];
+  const drawCo = () => { const box = $('#coPick'); if (!box) return; const main = $('#assess [name="responsible_id"]').value;
+    box.innerHTML = coSel.length ? coSel.map(id => `<span class="co-tag">${h(S.profiles.find(x => x.id === id)?.full_name || '?')}<button type="button" data-corm="${id}" aria-label="remove">✕</button></span>`).join('') : '<span class="muted small">Нет соисполнителей</span>';
+    $$('[data-corm]', box).forEach(b => b.addEventListener('click', () => { coSel = coSel.filter(x => x !== b.dataset.corm); drawCo(); }));
+    $$('#coAdd option').forEach(o => { o.hidden = !!o.value && (coSel.includes(o.value) || o.value === main); }); };
+  $('#coAdd')?.addEventListener('change', e => { const v = e.target.value; if (v && !coSel.includes(v) && v !== $('#assess [name="responsible_id"]').value) coSel.push(v); e.target.value = ''; drawCo(); });
+  $('#assess [name="responsible_id"]')?.addEventListener('change', e => { coSel = coSel.filter(x => x !== e.target.value); drawCo(); });
+  drawCo();
   $('#saveAssess')?.addEventListener('click', async () => {
     const box = $('#assess'), g = n => box.querySelector(`[name="${n}"]`).value;
-    const patch = { status: g('status'), responsible_id: g('responsible_id') || null, agreed_deadline: g('agreed_deadline') || null, priority: g('priority') || null, urgency: g('urgency') || null,
+    const patch = { status: g('status'), responsible_id: g('responsible_id') || null, co_responsible_ids: coSel.filter(x => x !== g('responsible_id')), agreed_deadline: g('agreed_deadline') || null, priority: g('priority') || null, urgency: g('urgency') || null,
       category: g('category') || null, scale: g('scale') || null, decision_level: g('decision_level') || null, rector_decision: g('rector_decision') || null, lead_department: g('lead_department').trim(),
       related_departments: g('related_departments').split(',').map(s => s.trim()).filter(Boolean), next_step: g('next_step').trim(), control_date: g('control_date') || null, coordinator_comment: g('coordinator_comment').trim() };
     try { await api.update(p.id, patch); await reloadProblems(); toast('Оценка сохранена'); viewProblem(id); } catch (e) { toast(errMsg(e), true); }
@@ -1916,7 +1940,7 @@ async function viewWizard(editId) {
    Мои задачи
    ===================================================================== */
 function viewMy() {
-  const mine = S.problems.filter(p => p.responsible_id === S.me.id);
+  const mine = S.problems.filter(p => onTeam(p, S.me.id));
   const open = mine.filter(isOpen).sort((a, b) => (a.agreed_deadline || '9999').localeCompare(b.agreed_deadline || '9999'));
   const over = open.filter(p => p.is_overdue), soon = open.filter(p => !p.is_overdue && p.days_left !== null && p.days_left <= 7), rest = open.filter(p => !over.includes(p) && !soon.includes(p));
   const done = mine.filter(p => !isOpen(p));
