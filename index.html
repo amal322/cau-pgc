@@ -413,6 +413,11 @@ table.t{width:100%;border-collapse:collapse;font-size:13.5px}
 .co-tag button{border:0;background:rgba(76,47,184,.12);color:inherit;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:10px;line-height:1}
 .co-tag button:hover{background:rgba(76,47,184,.25)}
 .co-chip{background:#EDE9FE;color:#4C2FB8;border-radius:99px;padding:0 7px;font-size:11.5px;font-weight:700}
+.ro .co-tag button,.ro #coAdd,.ro #saveAssess,.ro .assess-hint{display:none!important}
+.ro .co-tag{padding-right:11px}
+.ro .select:disabled,.ro .input:disabled,.ro .textarea:disabled{opacity:1;background:var(--surface-2);color:var(--ink);-webkit-text-fill-color:var(--ink);cursor:default;border-color:var(--line-2)}
+.ro .select:disabled{background-image:none}
+.ro .textarea:disabled{resize:none}
 
 /* =================== DOCUMENTS =================== */
 .regno{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.01em;color:var(--navy);white-space:nowrap}
@@ -704,6 +709,7 @@ tr[draggable]:hover .grip{opacity:1}tr.dragging{opacity:.4}
    ===================================================================== */
 (function () {
   const D = {
+    '🔒 Только просмотр — меняют администраторы OEC': '🔒 View only — OEC administrators make changes',
     'Основной ответственный': 'Main owner', 'Соисполнители': 'Co-assignees', 'Соисполнители:': 'Co-assignees:', '＋ Добавить соисполнителя…': '＋ Add co-assignee…', 'Нет соисполнителей': 'No co-assignees',
     'соисполнитель': 'co-assignee', 'добавил(а) соисполнителей:': 'added co-assignees:', 'снял(а) соисполнителей:': 'removed co-assignees:',
     'При назначении ответственного и срока статус сам станет «В работе». Ответственный и соисполнители получат уведомления в Telegram.': 'Once an owner and a deadline are set, the status becomes “In progress”. The owner and co-assignees are notified in Telegram.',
@@ -1766,8 +1772,8 @@ async function viewProblem(id) {
     <div style="margin-left:auto;text-align:right"><div class="muted small">Ответственный</div><div style="font-weight:600">${p.responsible_name ? h(p.responsible_name) : '<span class="muted">не назначен</span>'}</div>${coNames(p).length ? `<div class="muted small" style="margin-top:4px">Соисполнители</div><div style="font-weight:500" data-notr>${h(coNames(p).join(', '))}</div>` : ''}</div></div>`;
 
   let assessCard;
-  if (admin) {
-    assessCard = `<div class="card lift"><div class="assess-h"><h3>Оценка OEC</h3><div>Видят все, меняют только администраторы</div></div><div class="card-b" id="assess" style="padding-top:18px">
+  {
+    assessCard = `<div class="card lift"><div class="assess-h"><h3>Оценка OEC</h3><div>${admin ? 'Видят все, меняют только администраторы' : '🔒 Только просмотр — меняют администраторы OEC'}</div></div><div class="card-b ${admin ? '' : 'ro'}" id="assess" style="padding-top:18px">
       <div class="field"><label>Статус</label><select class="select" name="status">${opts(ENUM.status, p.status, null)}</select></div>
       <div class="field"><label>Основной ответственный</label><select class="select" name="responsible_id">${peopleOpts(p.responsible_id)}</select></div>
       <div class="field"><label>Соисполнители</label><div class="co-pick" id="coPick"></div><select class="select" id="coAdd"><option value="">＋ Добавить соисполнителя…</option>${S.profiles.filter(x => x.role !== 'pending').map(x => `<option value="${x.id}">${h(x.full_name || x.email)}${x.department ? ' · ' + h(x.department) : ''}</option>`).join('')}</select></div>
@@ -1785,9 +1791,10 @@ async function viewProblem(id) {
       <div class="field"><label>Комментарий координатора</label><textarea class="textarea" name="coordinator_comment" style="min-height:70px">${h(p.coordinator_comment)}</textarea></div>
       <datalist id="deptList">${S.departments.map(d => `<option value="${h(d.name)}">`).join('')}</datalist>
       <button class="btn gold" id="saveAssess" style="width:100%;justify-content:center;padding:12px">Сохранить оценку</button>
-      <div class="muted small" style="margin-top:8px">При назначении ответственного и срока статус сам станет «В работе». Ответственный и соисполнители получат уведомления в Telegram.</div>
+      <div class="muted small assess-hint" style="margin-top:8px">При назначении ответственного и срока статус сам станет «В работе». Ответственный и соисполнители получат уведомления в Telegram.</div>
     </div></div>`;
-  } else {
+  }
+  if (false) {
     const kv = [['Категория', p.category], ['Приоритет', p.priority ? prioB(p.priority) : null, 1], ['Срочность', p.urgency], ['Масштаб влияния', p.scale], ['Уровень решения', p.decision_level], ['Решение ректора', p.rector_decision], ['Ведущее подразделение', p.lead_department], ['Связанные подразделения', (p.related_departments || []).join(', ')], ['Следующий шаг', p.next_step], ['Контрольная проверка', p.control_date ? fmtD(p.control_date) : ''], ['Комментарий координатора', p.coordinator_comment]];
     assessCard = `<div class="card lift"><div class="assess-h"><h3>Оценка OEC</h3><div>Заполняют администраторы OEC</div></div><div class="card-b" style="padding-top:18px">
       ${p.category || p.priority ? `<dl class="kv">${kv.map(([k, v, raw]) => `<dt>${k}</dt><dd class="pre">${v ? (raw ? v : h(v)) : '<span class="muted">—</span>'}</dd>`).join('')}</dl>` : '<div class="muted">Задача ещё не оценена координатором OEC.</div>'}</div></div>`;
@@ -1818,6 +1825,7 @@ async function viewProblem(id) {
   $('#coAdd')?.addEventListener('change', e => { const v = e.target.value; if (v && !coSel.includes(v) && v !== $('#assess [name="responsible_id"]').value) coSel.push(v); e.target.value = ''; drawCo(); });
   $('#assess [name="responsible_id"]')?.addEventListener('change', e => { coSel = coSel.filter(x => x !== e.target.value); drawCo(); });
   drawCo();
+  if (!admin) $$('#assess select, #assess input, #assess textarea').forEach(e => { e.disabled = true; e.tabIndex = -1; });
   $('#saveAssess')?.addEventListener('click', async () => {
     const box = $('#assess'), g = n => box.querySelector(`[name="${n}"]`).value;
     const patch = { status: g('status'), responsible_id: g('responsible_id') || null, co_responsible_ids: coSel.filter(x => x !== g('responsible_id')), agreed_deadline: g('agreed_deadline') || null, priority: g('priority') || null, urgency: g('urgency') || null,
